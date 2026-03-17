@@ -31,12 +31,12 @@ cannot be tested, it is not ready.
 - [ ] T005 [P] Add Prettier config in `packages/config/prettier.config.*`
 - [ ] T006 [P] Add shared scripts/commands in root `package.json` (typecheck, lint, test, format)
 - [ ] T007 [P] Scaffold shared UI package in `packages/ui/` (tokens + theme primitives + component conventions)
-- [ ] T008 [P] Scaffold contracts package in `packages/contracts/` (OpenAPI client + connector schemas placeholders)
-- [ ] T009 Create Docker Compose baseline in `infra/compose/docker-compose.yml` (postgres, redis, object storage emulator placeholder, api, worker, web-storefront, web-admin)
+- [ ] T008 [P] Scaffold contracts package in `packages/contracts/` (OpenAPI TS types generated via `openapi-typescript` + connector message schemas placeholders)
+- [ ] T009 Create Docker Compose baseline in `infra/compose/docker-compose.yml` (postgres, redis, MinIO object storage for dev, api, worker, web-storefront, web-admin)
 - [ ] T009a [P] Add dev override compose in `infra/compose/docker-compose.override.yml` (bind mounts, hot reload, dev ports)
 - [ ] T010 [P] Add Dockerfiles for services in `apps/api/Dockerfile`, `apps/worker/Dockerfile`, `apps/web-storefront/Dockerfile`, `apps/web-admin/Dockerfile`, `apps/connector/Dockerfile`
 - [ ] T011 Add environment template in `.env.example` and document variable groups (db/redis/storage/auth/payments/email/connector)
-- [ ] T012 [P] Configure pre-commit hooks (lint/format) in `.husky/` or equivalent
+- [ ] T012 [P] Configure pre-commit hooks (lint/format) in `.husky/`
 - [ ] T013 Add CI pipeline skeleton in `.github/workflows/ci.yml` (install → lint → typecheck → tests → build containers)
 - [ ] T014 [P] Add secret scanning workflow in `.github/workflows/security-secrets.yml`
 - [ ] T015 [P] Add dependency scanning workflow in `.github/workflows/security-deps.yml`
@@ -53,7 +53,7 @@ cannot be tested, it is not ready.
 
 - [ ] T017 Implement PostgreSQL schema tooling and migrations baseline in `apps/api/prisma/schema.prisma` and `apps/api/prisma/migrations/`
 - [ ] T017a [P] Document migration workflow (local + CI + prod) in `docs/runbooks/migrations.md`
-- [ ] T018 [P] Implement core domain enums/constants (order/quote/payment statuses) in `packages/contracts/src/domain/` (or equivalent)
+- [ ] T018 [P] Implement core domain enums/constants (order/quote/payment statuses) in `packages/contracts/src/domain/`
 - [ ] T019 Implement API service scaffold with health endpoints in `apps/api/src/server.ts`
 - [ ] T020 [P] Implement structured logging + correlation IDs in `apps/api/src/lib/logging.ts`
 - [ ] T021 [P] Implement error envelope and error mapper in `apps/api/src/lib/errors.ts`
@@ -61,7 +61,7 @@ cannot be tested, it is not ready.
 - [ ] T023 Implement OpenAPI generation + versioned routing in `apps/api/src/openapi/` and `apps/api/src/routes/v1/`
 - [ ] T024 [P] Add OpenAPI client generation script output path in `packages/contracts/src/openapi/` and wire into build
 - [ ] T025 Implement auth + session handling baseline in `apps/api/src/modules/auth/` (secure cookie config, login/logout, password hashing)
-- [ ] T025a Implement MFA primitives (TOTP + passkeys, email code fallback) in `apps/api/src/modules/auth/mfa/`
+- [ ] T025a Implement MFA primitives (TOTP + passkeys, email code fallback with TTL + attempt limits) in `apps/api/src/modules/auth/mfa/`
 - [ ] T025b Implement “admin MFA required” enforcement in `apps/api/src/modules/auth/policy.ts` (block admin sessions until MFA enrolled/verified)
 - [ ] T025c Implement admin-assisted MFA “force reset” flow (audited) in `apps/api/src/routes/v1/admin/security.ts`
 - [ ] T026 Implement RBAC deny-by-default middleware in `apps/api/src/modules/rbac/` (explicit admin/staff boundaries)
@@ -101,7 +101,7 @@ cannot be tested, it is not ready.
 - [ ] T041 [P] [US1] Implement PDP (product detail) in `apps/web-storefront/src/app/(store)/products/[slug]/page.tsx`
 - [ ] T042 [P] [US1] Implement cart UI in `apps/web-storefront/src/app/(store)/cart/page.tsx`
 - [ ] T043 [US1] Implement checkout flow (guest supported) in `apps/web-storefront/src/app/(store)/checkout/page.tsx`
- - [ ] T043a [P] [US1] Implement CSRF and basic security headers (CSP, referrer policy) for storefront in `apps/web-storefront/src/middleware.ts` or equivalent
+- [ ] T043a [P] [US1] Implement CSRF and basic security headers (CSP, referrer policy) for storefront in `apps/web-storefront/src/middleware.ts`
 - [ ] T044 [P] [US1] Implement Order/OrderItem/OrderEvent models in `apps/api/src/modules/orders/` and Prisma models
 - [ ] T045 [US1] Implement checkout/order creation endpoint in `apps/api/src/routes/v1/checkout.ts`
 - [ ] T046 [P] [US1] Implement customer portal shell + orders list in `apps/web-storefront/src/app/(account)/orders/page.tsx`
@@ -134,8 +134,8 @@ cannot be tested, it is not ready.
 
 - [ ] T057 [P] [US2] Implement Upload/ModelFile/Quote models in `apps/api/src/modules/quotes/` and Prisma models
 - [ ] T058 [US2] Implement signed upload URL endpoints in `apps/api/src/routes/v1/uploads.ts`
-- [ ] T059 [US2] Implement upload completion + scan enqueue in `apps/api/src/routes/v1/uploads.ts`
-- [ ] T060 [P] [US2] Implement scanning job + status updates in `apps/worker/src/jobs/upload-scan.ts` (malware scan/file moderation hook)
+- [ ] T059 [US2] Implement upload completion + scan enqueue in `apps/api/src/routes/v1/uploads.ts` (write to quarantine bucket/keyspace only)
+- [ ] T060 [P] [US2] Implement scanning job + status updates in `apps/worker/src/jobs/upload-scan.ts` (malware scan/file moderation hook, promote from quarantine to accepted storage on success)
 - [ ] T061 [P] [US2] Implement STL/3MF analysis job in `apps/worker/src/jobs/model-analyze.ts`
 - [ ] T062 [US2] Implement quote compute pipeline and pricing rules baseline in `apps/api/src/modules/pricing/`
 - [ ] T063 [US2] Implement manual-review routing rules (format/thresholds) in `apps/api/src/modules/quotes/manual-review.ts`
@@ -143,7 +143,7 @@ cannot be tested, it is not ready.
 - [ ] T065 [P] [US2] Implement quote result UI (breakdown + estimate vs manual) in `apps/web-storefront/src/app/(account)/quotes/[id]/page.tsx`
 - [ ] T066 [US2] Implement quote → order conversion endpoint in `apps/api/src/routes/v1/quotes.ts`
 - [ ] T067 [US2] Implement payment timing policy enforcement in `apps/api/src/modules/payments/payment-policy.ts`
-- [ ] T067a [P] [US2] Implement Stripe/PayPal webhook handlers with signature verification, replay protection, and idempotency in `apps/api/src/modules/payments/webhooks.ts`
+- [ ] T067a [P] [US2] Implement Stripe/PayPal webhook handlers with signature verification, replay protection (timestamp + nonce store with expiry), and idempotent processing in `apps/api/src/modules/payments/webhooks.ts`
 
 **Checkpoint**: US2 is independently testable for instant and manual-review cases.
 
@@ -264,6 +264,7 @@ cannot be tested, it is not ready.
 - [ ] T142 [P] Implement model/file retention policy controls + customer deletion flow (audited) in `apps/api/src/modules/files/retention/`
 - [ ] T143 [P] Implement shipping/tracking status sync hooks (provider-agnostic) in `apps/api/src/modules/shipping/sync/`
 - [ ] T144 [P] Implement saved repeat-order presets (customer) in `apps/api/src/modules/presets/` and UI in `apps/web-storefront/src/app/(account)/presets/`
+- [ ] T145 [P] Implement minimal email notifications for key events (order created, quote ready/updated, shipment status change) in `apps/worker/src/jobs/notifications-email.ts` and `apps/api/src/modules/notifications/email.ts`
 
 ---
 
@@ -341,12 +342,14 @@ Task: "Implement STL/3MF analysis job in apps/worker/src/jobs/model-analyze.ts"
 
 **Purpose**: High-value features explicitly deferred until after the initial production rollout.
 
+> Rule of thumb: Do **not** block the initial “ready for production” release on any Phase 2 backlog item.
+
 - [ ] T201 [P] Design and implement automated printer scheduling optimization engine in `apps/api/src/modules/scheduling/` and supporting UI in `apps/web-admin/src/app/(admin)/scheduling/`
 - [ ] T202 [P] Implement B2B organization accounts (org + members + roles) in `apps/api/src/modules/organizations/` and admin UI in `apps/web-admin/src/app/(admin)/organizations/`
 - [ ] T203 [P] Implement organization procurement flows (approval chains, PO requirements, budgets) in `apps/api/src/modules/organizations/procurement/` and related UI
 - [ ] T204 [P] Implement SLA rules for business customers and reporting in `apps/api/src/modules/organizations/sla/`
 - [ ] T205 [P] Implement richer shipping integrations (e.g., Australia Post/EasyShip) behind an abstract shipping provider interface in `apps/api/src/modules/shipping/providers/`
-- [ ] T206 [P] Implement advanced quote rules engine (domain-specific rule language and UI) in `apps/api/src/modules/quotes/rules-engine/` and `apps/web-admin/src/app/(admin)/quotes/rules/`
+- [ ] T206 [P] Implement advanced quote rules engine (domain-specific rule language and UI) in `apps/api/src/modules/quotes/rules-engine/` and `apps/web-admin/src/app/(admin)/quotes/rules/` (builds on MVP risk engine)
 - [ ] T207 [P] Implement multi-brand printer abstraction layer (beyond BambuLab) in `apps/api/src/modules/print/printer-profiles/` and connector extensions
 - [ ] T208 [P] Implement customer-facing live print telemetry view in `apps/web-storefront/src/app/(account)/orders/[id]/live.tsx`
 - [ ] T209 [P] Implement timelapse capture/metadata ingestion from connector in `apps/connector/src/timelapse/` and `apps/api/src/modules/print/timelapse.ts`

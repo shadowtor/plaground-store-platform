@@ -116,3 +116,21 @@ defaults.
 
 - Hardcode AU behavior: faster but becomes tech debt as soon as requirements expand.
 
+## Reference codebases to review (implementation inspirations)
+
+These are explicitly tracked as “study and borrow patterns” references (principles, flows, and
+operational ergonomics), not copy-paste targets:
+
+- **MakerWorks storefront platform** (`mkw2`): `https://github.com/schartrand77/mkw2`
+  - Relevant for: 3D printing storefront patterns, quoting/checkout flows, Next.js + Prisma patterns, ops surfaces.
+- **Bambuddy**: `https://github.com/maziggy/bambuddy`
+  - Relevant for: printer fleet UI/UX, queues, telemetry patterns, Bambu LAN/dev-mode behavior, timelapse UX.
+- **StockWorks**: `https://github.com/schartrand77/stockworks`
+  - Relevant for: inventory/material domain modeling, stock movements, ops-first admin UX.
+- **PrintLab**: `https://github.com/schartrand77/PrintLab`
+  - Relevant for: local printer connector boundary, job ledger/idempotency, callbacks/events, timelapse → YouTube integration patterns.
+- **Manifixer**: `https://github.com/schartrand77/manifixer`
+  - Relevant for: STL repair/format conversion service patterns and safe “mesh-fix” pipeline ideas.
+- **MCP 3D Printer Server**: `https://github.com/DMontgomery40/mcp-3D-printer-server`
+  - Relevant for: Bambu MQTT/FTP command surfaces, `.3mf` print workflow notes, and MCP tool-shaping ideas.
+
