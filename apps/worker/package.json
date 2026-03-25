@@ -1,0 +1,37 @@
+{
+  "name": "worker",
+  "version": "0.0.1",
+  "private": true,
+  "description": "PLAground BullMQ background worker — file scanning, model analysis, notifications",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "tsx watch src/worker.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src --max-warnings 0",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.6.0",
+    "bullmq": "^5.50.0",
+    "zod": "^3.24.2",
+    "ioredis": "^5.6.0",
+    "nodemailer": "^7.0.3",
+    "@aws-sdk/client-s3": "^3.790.0",
+    "@aws-sdk/s3-request-presigner": "^3.790.0",
+    "pino": "^9.6.0",
+    "packages/config": "workspace:*",
+    "packages/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "tsx": "^4.19.3",
+    "vitest": "^3.1.1",
+    "@vitest/coverage-v8": "^3.1.1",
+    "@types/node": "^22.14.0",
+    "@types/nodemailer": "^6.4.17"
+  }
+}

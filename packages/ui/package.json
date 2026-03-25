@@ -1,0 +1,29 @@
+{
+  "name": "packages/ui",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Shared design tokens, components, chart primitives, and theme configuration",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./tokens": "./src/tokens/index.ts",
+    "./components": "./src/components/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "framer-motion": "^12.6.3",
+    "tailwindcss": "^4.1.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "@types/react": "^19.1.0",
+    "@types/node": "^22.14.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  }
+}
