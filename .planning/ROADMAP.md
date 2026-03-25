@@ -32,7 +32,7 @@ requires no schema migrations on live data.
   3. A registered customer can upload a STL or 3MF file, receive an instant quote with a line-item cost breakdown and explicit "instant estimate" badge within 30 seconds, and convert that quote into an order that appears in their portal with a status timeline.
   4. An admin cannot complete login without a TOTP or passkey MFA challenge, and every privileged admin action (quote approval, order update, product change) produces an immutable, queryable audit log entry that the application DB role cannot UPDATE or DELETE.
   5. A customer receives a transactional email within 2 minutes of each order status change and quote decision; a customer who has linked their Discord account receives the same events as DMs; an admin who has configured Discord receives DMs for new orders and print queue events.
-**Plans**: TBD
+**Plans**: 01 Foundation Platform, 02 Identity & Access, 03 Storefront Experience, 04 Commerce Checkout & Payments, 05 Quote Portal & Notifications, 06 Admin Operations
 **UI hint**: yes
 
 ### Phase 2: PLAground Fulfillment
@@ -47,7 +47,7 @@ is now fully autonomous from quote to print.
   3. An admin approves a dispatch, the job is sent to the assigned printer, and live telemetry (temperatures, progress percentage, AMS state) appears on the admin dashboard within 10 seconds — the admin can override the auto-assigned printer before approving.
   4. When the connector loses its internet connection mid-job, the platform marks it as "Degraded" and blocks further dispatch; when reconnected, the connector resumes reporting without admin intervention, but re-dispatch of any affected job requires explicit admin approval.
   5. The connector checks for a newer version on startup, drains any in-progress jobs, pulls the updated image, and restarts cleanly — with an operator-accessible flag to disable auto-updates entirely.
-**Plans**: TBD
+**Plans**: 01 Foundation Platform, 02 Identity & Access, 03 Storefront Experience, 04 Commerce Checkout & Payments, 05 Quote Portal & Notifications, 06 Admin Operations
 **UI hint**: yes
 
 ### Phase 3: [SaaS Platform]
@@ -60,7 +60,7 @@ up, subscribe, and launch their own branded storefront.
   1. A new shop owner completes the self-serve signup flow, enters payment details, and within 2 minutes has a live storefront at `theirshop.plaground.io` with their logo and brand colors — no manual intervention from PLAground required.
   2. A shop on a lower plan attempts to access a feature gated to a higher plan and is blocked at runtime with a clear upgrade prompt — and the gate survives a Stripe webhook replay without double-unlocking or locking an active subscription.
   3. The platform super-admin can view all tenant shops, suspend a shop, adjust its plan, and initiate a time-limited impersonation session — and every impersonation action appears in the audit log with both the super-admin actor and the impersonated tenant field.
-**Plans**: TBD
+**Plans**: 01 Foundation Platform, 02 Identity & Access, 03 Storefront Experience, 04 Commerce Checkout & Payments, 05 Quote Portal & Notifications, 06 Admin Operations
 **UI hint**: yes
 
 ### Phase 4: Self-Hosted Distribution
@@ -73,7 +73,7 @@ script.
   1. A technical operator can run `docker compose up` from the self-hosted bundle, provide a `.env` configuration file, and have a fully functional single-shop instance running locally with no SaaS billing or subdomain routing active.
   2. A non-technical operator can run the interactive installer script, answer prompted questions, and complete first-run configuration without editing any config files manually — the script wraps Docker Compose end-to-end.
   3. An operator running a version-to-version upgrade follows a documented procedure and migration tooling that completes without data loss — the platform health check endpoint reports the current schema version before and after upgrade.
-**Plans**: TBD
+**Plans**: 01 Foundation Platform, 02 Identity & Access, 03 Storefront Experience, 04 Commerce Checkout & Payments, 05 Quote Portal & Notifications, 06 Admin Operations
 
 ## Progress
 
@@ -82,7 +82,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. PLAground Commerce | 0/TBD | Not started | - |
+| 1. PLAground Commerce | 1/3 | In Progress|  |
 | 2. PLAground Fulfillment | 0/TBD | Not started | - |
 | 3. [SaaS Platform] | 0/TBD | Not started | - |
 | 4. Self-Hosted Distribution | 0/TBD | Not started | - |
+

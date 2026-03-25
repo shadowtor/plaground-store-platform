@@ -2,16 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Roadmap restructured to 4 phases; Phase 1 context updated
-last_updated: "2026-03-25T05:13:24.163Z"
-last_activity: 2026-03-25 — Roadmap rebuilt from 7 phases to 4 business-milestone phases
+status: Ready to execute
+stopped_at: Completed 01-01-PLAN.md — monorepo foundation
+last_updated: "2026-03-25T22:47:03.286Z"
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 3
+  completed_plans: 1
 ---
 
 # Project State
@@ -21,16 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** A customer can browse the storefront, get an instant quote for a 3D model upload, and place an order — and the shop owner can fulfill it from a single dashboard without touching the printer manually until they choose to.
-**Current focus:** Phase 1 — PLAground Commerce
+**Current focus:** Phase 01 — plaground-commerce
 
 ## Current Position
 
-Phase: 1 of 4 (PLAground Commerce)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-03-25 — Roadmap rebuilt from 7 phases to 4 business-milestone phases
-
-Progress: [░░░░░░░░░░] 0%
+Phase: 01 (plaground-commerce) — EXECUTING
+Plan: 2 of 3
 
 ## Performance Metrics
 
@@ -52,6 +46,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01 P01 | 13 | 4 tasks | 39 files |
 
 ## Accumulated Context
 
@@ -66,6 +61,9 @@ Recent decisions affecting current work:
 - Phase 1: PgBouncer mandatory from day one (Prisma per-worker connections hit max_connections under load)
 - Phase 2: Slicing runs in connector container (OrcaSlicer on Pi), not in cloud worker — worker sends typed WSS command
 - Roadmap restructured: Infrastructure folded into Phase 1 (PLAground Commerce); self-hosted separated as Phase 4 (explicitly last)
+- [Phase 01]: RLS enforced via app_user role + SET LOCAL app.current_tenant_id per transaction (never via postgres superuser which bypasses RLS)
+- [Phase 01]: Full 38-entity Prisma schema defined in Phase 1 — no incremental entity additions in later phases
+- [Phase 01]: Connector message schemas use Zod discriminated union on type field — both api and connector import from packages/contracts
 
 ### Pending Todos
 
@@ -80,6 +78,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-25T05:13:24.152Z
-Stopped at: Roadmap restructured to 4 phases; Phase 1 context updated
-Resume file: .planning/phases/01-plaground-commerce/01-CONTEXT.md
+Last session: 2026-03-25T22:47:03.274Z
+Stopped at: Completed 01-01-PLAN.md — monorepo foundation
+Resume file: None
