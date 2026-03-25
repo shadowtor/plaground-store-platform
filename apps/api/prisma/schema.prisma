@@ -1,0 +1,889 @@
+// =============================================================================
+// PLAground Platform — Prisma Schema
+// =============================================================================
+// Rules:
+//   - ALL tenant-scoped tables include tenantId UUID NOT NULL
+//   - PostgreSQL RLS enforced via app_user role + SET LOCAL app.current_tenant_id
+//   - All entity tables are defined in Phase 1 (no new entity tables in later phases)
+//   - DB-level enums enforce valid state values at the constraint level
+//   - Audit log is INSERT-only for app_user (enforced via RLS + trigger)
+// =============================================================================
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  directUrl         = env("DIRECT_DATABASE_URL")
+  extensions        = [pgcrypto]
+}
+
+// =============================================================================
+// ENUMS — PostgreSQL native enums; Prisma maps to TS enums
+// =============================================================================
+
+enum UserStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  DELETED
+
+  @@map("user_status")
+}
+
+enum UserRoleType {
+  GUEST
+  CUSTOMER
+  STAFF
+  ADMIN
+  CONNECTOR_NODE
+
+  @@map("user_role_type")
+}
+
+enum QuoteStatus {
+  DRAFT
+  COMPUTING
+  INSTANT_READY
+  MANUAL_REVIEW
+  APPROVED
+  REJECTED
+  EXPIRED
+  CONVERTED
+
+  @@map("quote_status")
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAYMENT_AUTHORIZED
+  PAYMENT_CAPTURED
+  PROCESSING
+  PREPARING
+  DISPATCHED
+  COMPLETED
+  CANCELLED
+  REFUNDED
+
+  @@map("order_status")
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+
+  @@map("payment_status")
+}
+
+enum PaymentProvider {
+  STRIPE
+  PAYPAL
+
+  @@map("payment_provider")
+}
+
+enum PrintJobStatus {
+  QUEUED
+  AWAITING_APPROVAL
+  APPROVED
+  DISPATCHING
+  PRINTING
+  COMPLETED
+  FAILED
+  CANCELLED
+
+  @@map("print_job_status")
+}
+
+enum ConnectorStatus {
+  OFFLINE
+  ONLINE
+  DEGRADED
+  BLOCKED
+
+  @@map("connector_status")
+}
+
+enum PrinterStatus {
+  IDLE
+  PRINTING
+  ERROR
+  OFFLINE
+  MAINTENANCE
+
+  @@map("printer_status")
+}
+
+enum UploadStatus {
+  PENDING
+  SCANNING
+  ACCEPTED
+  REJECTED
+
+  @@map("upload_status")
+}
+
+enum ModelFileStatus {
+  PENDING_ANALYSIS
+  ANALYZING
+  READY
+  FAILED
+
+  @@map("model_file_status")
+}
+
+enum NotificationChannel {
+  EMAIL
+  DISCORD
+  IN_APP
+
+  @@map("notification_channel")
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  FAILED
+
+  @@map("notification_status")
+}
+
+// =============================================================================
+// TENANT — Multi-tenancy root entity (every tenant-scoped entity references this)
+// =============================================================================
+
+model Tenant {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug      String   @unique @db.VarChar(63)
+  name      String   @db.VarChar(255)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Tenant settings (stored as JSON for flexibility)
+  settings  Json?
+
+  // Relations
+  users          User[]
+  products       Product[]
+  categories     Category[]
+  orders         Order[]
+  quotes         Quote[]
+  uploads        Upload[]
+  connectorNodes ConnectorNode[]
+  auditLog       AuditLogEntry[]
+
+  @@map("tenants")
+}
+
+// =============================================================================
+// USERS & AUTH — User entity, roles, permissions
+// =============================================================================
+
+model User {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String     @db.Uuid
+  email        String     @db.VarChar(320)
+  passwordHash String     @db.Text
+  status       UserStatus @default(PENDING_VERIFICATION)
+  emailVerifiedAt DateTime?
+  mfaSecret    String?    @db.Text  // TOTP secret (encrypted at rest)
+  mfaEnabled   Boolean    @default(false)
+  lastLoginAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customerProfile CustomerProfile?
+  userRoles       UserRole[]
+  orders          Order[]
+  quotes          Quote[]
+  auditLog        AuditLogEntry[]  @relation("AuditActor")
+  notifications   Notification[]
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@index([email])
+  @@map("users")
+}
+
+model CustomerProfile {
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String  @unique @db.Uuid
+  displayName String? @db.VarChar(255)
+  phone       String? @db.VarChar(30)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  addresses Address[]
+
+  @@map("customer_profiles")
+}
+
+model Address {
+  id                String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customerProfileId String  @db.Uuid
+  label             String? @db.VarChar(100)
+  line1             String  @db.VarChar(255)
+  line2             String? @db.VarChar(255)
+  city              String  @db.VarChar(100)
+  state             String? @db.VarChar(100)
+  postalCode        String  @db.VarChar(20)
+  country           String  @db.VarChar(2)  // ISO 3166-1 alpha-2
+  isDefault         Boolean @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  customerProfile CustomerProfile @relation(fields: [customerProfileId], references: [id], onDelete: Cascade)
+  orders          Order[]
+
+  @@index([customerProfileId])
+  @@map("addresses")
+}
+
+model Role {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        UserRoleType @unique
+  description String?      @db.Text
+  createdAt   DateTime     @default(now())
+
+  userRoles        UserRole[]
+  rolePermissions  RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key         String  @unique @db.VarChar(100)
+  description String? @db.Text
+  createdAt   DateTime @default(now())
+
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model UserRole {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @db.Uuid
+  roleId    String   @db.Uuid
+  grantedAt DateTime @default(now())
+  grantedBy String?  @db.Uuid  // null = system grant (seed, enrollment)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  roleId       String   @db.Uuid
+  permissionId String   @db.Uuid
+  grantedAt    DateTime @default(now())
+
+  role       Role       @relation(fields: [roleId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// =============================================================================
+// CATALOG — Products, categories, variants
+// =============================================================================
+
+model Category {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String   @db.Uuid
+  slug        String   @db.VarChar(100)
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  imageUrl    String?  @db.Text
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  parentId    String?  @db.Uuid
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant   Tenant     @relation(fields: [tenantId], references: [id])
+  parent   Category?  @relation("CategoryParent", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryParent")
+  products Product[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@map("categories")
+}
+
+model Product {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String   @db.Uuid
+  categoryId  String?  @db.Uuid
+  slug        String   @db.VarChar(100)
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  imageUrls   String[] @db.Text
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant   Tenant          @relation(fields: [tenantId], references: [id])
+  category Category?       @relation(fields: [categoryId], references: [id])
+  variants ProductVariant[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@index([tenantId, categoryId])
+  @@map("products")
+}
+
+model ProductVariant {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId   String   @db.Uuid
+  sku         String   @db.VarChar(100)
+  name        String   @db.VarChar(255)
+  priceAmount Int      // stored in cents (smallest currency unit)
+  currency    String   @default("AUD") @db.VarChar(3)
+  stockPolicy String   @default("track") @db.VarChar(20)  // track | infinite | on-demand
+  stockQty    Int?
+  attributes  Json?    // color, material, size etc.
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+
+  @@unique([productId, sku])
+  @@index([productId])
+  @@map("product_variants")
+}
+
+// =============================================================================
+// UPLOADS & MODEL FILES — 3D model upload pipeline
+// =============================================================================
+
+model Upload {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String       @db.Uuid
+  userId       String       @db.Uuid
+  filename     String       @db.VarChar(255)
+  contentType  String       @db.VarChar(100)
+  sizeBytes    BigInt
+  s3Key        String       @db.Text
+  status       UploadStatus @default(PENDING)
+  scanResult   Json?        // malware/content scan result
+  rejectionReason String?   @db.Text
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  tenant    Tenant     @relation(fields: [tenantId], references: [id])
+  modelFile ModelFile?
+
+  @@index([tenantId])
+  @@index([tenantId, userId])
+  @@map("uploads")
+}
+
+model ModelFile {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  uploadId       String          @unique @db.Uuid
+  format         String          @db.VarChar(10)  // stl | 3mf | obj | step
+  volumeCm3      Float?
+  boundingBoxMm  Json?           // { x, y, z }
+  triangleCount  Int?
+  analysisStatus ModelFileStatus @default(PENDING_ANALYSIS)
+  analysisResult Json?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  upload Upload  @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+  quotes Quote[]
+
+  @@map("model_files")
+}
+
+// =============================================================================
+// QUOTES — Pricing snapshots (immutable once issued)
+// =============================================================================
+
+model PricingRuleSet {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String   @db.VarChar(100)
+  isActive        Boolean  @default(true)
+  // Pricing parameters stored as JSON for flexibility
+  rules           Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  quotes                Quote[]
+  manualReviewThresholds ManualReviewThreshold[]
+
+  @@map("pricing_rule_sets")
+}
+
+model ManualReviewThreshold {
+  id               String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  pricingRuleSetId String  @db.Uuid
+  conditionType    String  @db.VarChar(100)  // volume_exceeds | price_exceeds | format_is | etc.
+  conditionValue   Json
+  createdAt        DateTime @default(now())
+
+  pricingRuleSet PricingRuleSet @relation(fields: [pricingRuleSetId], references: [id])
+
+  @@map("manual_review_thresholds")
+}
+
+model Quote {
+  id               String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId         String      @db.Uuid
+  userId           String      @db.Uuid
+  modelFileId      String?     @db.Uuid
+  pricingRuleSetId String?     @db.Uuid
+  status           QuoteStatus @default(DRAFT)
+  // Immutable pricing snapshot — stored at quote creation time
+  inputSnapshot    Json        // model dimensions, material, quantity
+  priceBreakdown   Json?       // { material, labour, overhead, tax, total }
+  currency         String      @default("AUD") @db.VarChar(3)
+  totalAmount      Int?        // in cents
+  expiresAt        DateTime?
+  convertedToOrderId String?   @db.Uuid  @unique
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  tenant        Tenant                @relation(fields: [tenantId], references: [id])
+  user          User                  @relation(fields: [userId], references: [id])
+  modelFile     ModelFile?            @relation(fields: [modelFileId], references: [id])
+  pricingRuleSet PricingRuleSet?     @relation(fields: [pricingRuleSetId], references: [id])
+  riskAssessment QuoteRiskAssessment?
+  review         QuoteReview?
+  order          Order?               @relation("QuoteOrder", fields: [convertedToOrderId], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, userId])
+  @@index([tenantId, status])
+  @@map("quotes")
+}
+
+model QuoteRiskAssessment {
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quoteId  String @unique @db.Uuid
+  score    Int    // 0-100 risk score
+  factors  Json   // array of contributing risk factors
+  requiresManualReview Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  quote Quote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@map("quote_risk_assessments")
+}
+
+model QuoteReview {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quoteId    String   @unique @db.Uuid
+  reviewerId String   @db.Uuid  // User.id of the reviewer (Admin/Staff)
+  decision   String   @db.VarChar(30)  // APPROVED | REJECTED | REQUEST_CHANGES
+  note       String?  @db.Text
+  reviewedAt DateTime @default(now())
+
+  quote Quote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@map("quote_reviews")
+}
+
+// =============================================================================
+// ORDERS — Purchase records
+// =============================================================================
+
+model Order {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String      @db.Uuid
+  userId        String?     @db.Uuid  // null = guest checkout
+  shippingAddressId String? @db.Uuid
+  status        OrderStatus @default(PENDING_PAYMENT)
+  currency      String      @default("AUD") @db.VarChar(3)
+  subtotalAmount Int        // in cents
+  taxAmount     Int         @default(0)
+  shippingAmount Int        @default(0)
+  totalAmount   Int         // in cents
+  notes         String?     @db.Text
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  tenant          Tenant      @relation(fields: [tenantId], references: [id])
+  user            User?       @relation(fields: [userId], references: [id])
+  shippingAddress Address?    @relation(fields: [shippingAddressId], references: [id])
+  items           OrderItem[]
+  events          OrderEvent[]
+  payment         Payment?
+  invoice         Invoice?
+  printJobs       PrintJob[]
+  sourceQuote     Quote?      @relation("QuoteOrder")
+
+  @@index([tenantId])
+  @@index([tenantId, userId])
+  @@index([tenantId, status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId          String   @db.Uuid
+  productVariantId String?  @db.Uuid  // null for custom/quote items
+  quoteId          String?  @db.Uuid
+  description      String   @db.VarChar(500)
+  quantity         Int      @default(1)
+  unitAmount       Int      // in cents
+  totalAmount      Int      // in cents
+  attributes       Json?
+  createdAt        DateTime @default(now())
+
+  order          Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productVariant ProductVariant? @relation(fields: [productVariantId], references: [id])
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model OrderEvent {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId   String   @db.Uuid
+  type      String   @db.VarChar(100)  // e.g. ORDER_CREATED, PAYMENT_CAPTURED, STATUS_CHANGED
+  actorId   String?  @db.Uuid
+  note      String?  @db.Text
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("order_events")
+}
+
+// =============================================================================
+// PAYMENTS — Provider-agnostic payment state
+// =============================================================================
+
+model Payment {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId         String          @unique @db.Uuid
+  provider        PaymentProvider
+  providerRef     String          @db.VarChar(255)  // Stripe PaymentIntent ID / PayPal Order ID
+  status          PaymentStatus   @default(PENDING)
+  amount          Int             // in cents
+  currency        String          @default("AUD") @db.VarChar(3)
+  authorizedAt    DateTime?
+  capturedAt      DateTime?
+  idempotencyKey  String          @unique @db.VarChar(255)
+  metadata        Json?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  order   Order    @relation(fields: [orderId], references: [id])
+  refunds Refund[]
+
+  @@index([provider, providerRef])
+  @@map("payments")
+}
+
+model Invoice {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId    String   @unique @db.Uuid
+  number     String   @unique @db.VarChar(50)
+  s3Key      String?  @db.Text  // PDF in object storage
+  issuedAt   DateTime @default(now())
+  dueAt      DateTime?
+  paidAt     DateTime?
+  totalAmount Int
+  currency    String  @default("AUD") @db.VarChar(3)
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("invoices")
+}
+
+model Refund {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  paymentId   String   @db.Uuid
+  amount      Int      // in cents
+  reason      String?  @db.Text
+  providerRef String?  @db.VarChar(255)
+  refundedAt  DateTime @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id])
+
+  @@index([paymentId])
+  @@map("refunds")
+}
+
+// =============================================================================
+// CONNECTOR & PRINTER MANAGEMENT — Print dispatch and fleet management
+// Phase 1: schema + Docker stub. Full BambuLab integration deferred to Phase 2.
+// =============================================================================
+
+model ConnectorNode {
+  id               String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId         String          @db.Uuid
+  name             String          @db.VarChar(100)
+  status           ConnectorStatus @default(OFFLINE)
+  lastSeenAt       DateTime?
+  enrolledAt       DateTime?
+  credentialHash   String?         @db.Text  // hashed device credential
+  scopes           String[]        // e.g. ["connector.heartbeat.write", "connector.command.receive"]
+  metadata         Json?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
+  printers Printer[]
+
+  @@index([tenantId])
+  @@map("connector_nodes")
+}
+
+model Printer {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  connectorNodeId String        @db.Uuid
+  name            String        @db.VarChar(100)
+  model           String        @db.VarChar(100)  // e.g. "BambuLab X1C"
+  serialNumber    String?       @db.VarChar(100)
+  status          PrinterStatus @default(OFFLINE)
+  lastTelemetryAt DateTime?
+  metadata        Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  connectorNode ConnectorNode    @relation(fields: [connectorNodeId], references: [id])
+  printJobs     PrintJob[]
+  maintenanceLogs MaintenanceLog[]
+
+  @@index([connectorNodeId])
+  @@map("printers")
+}
+
+model PrintJob {
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId          String         @db.Uuid
+  printerId        String?        @db.Uuid  // null until assigned
+  status           PrintJobStatus @default(QUEUED)
+  // Admin approval required before dispatch — NEVER auto-dispatched
+  approvedByUserId String?        @db.Uuid
+  approvedAt       DateTime?
+  dispatchedAt     DateTime?
+  completedAt      DateTime?
+  projectFileS3Key String?        @db.Text  // admin-provided override or auto-sliced
+  metadata         Json?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  order    Order           @relation(fields: [orderId], references: [id])
+  printer  Printer?        @relation(fields: [printerId], references: [id])
+  events   PrintJobEvent[]
+  qcChecks QCCheck[]
+  failureReports PrintFailure[]
+
+  @@index([orderId])
+  @@index([printerId])
+  @@map("print_jobs")
+}
+
+model PrintJobEvent {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  printJobId String   @db.Uuid
+  type       String   @db.VarChar(100)  // DISPATCHED, PRINTING, LAYER_PROGRESS, COMPLETED, FAILED
+  payload    Json?
+  recordedAt DateTime @default(now())
+
+  printJob PrintJob @relation(fields: [printJobId], references: [id], onDelete: Cascade)
+
+  @@index([printJobId])
+  @@map("print_job_events")
+}
+
+model QCCheck {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  printJobId String   @db.Uuid
+  passedAt   DateTime?
+  failedAt   DateTime?
+  notes      String?  @db.Text
+  imageUrls  String[]
+  createdAt  DateTime @default(now())
+
+  printJob PrintJob @relation(fields: [printJobId], references: [id])
+
+  @@index([printJobId])
+  @@map("qc_checks")
+}
+
+model PrintFailure {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  printJobId   String   @db.Uuid
+  reason       String   @db.Text
+  errorCode    String?  @db.VarChar(100)
+  imageUrls    String[]
+  reprintId    String?  @db.Uuid
+  failedAt     DateTime @default(now())
+
+  printJob PrintJob  @relation(fields: [printJobId], references: [id])
+  reprint  Reprint?  @relation(fields: [reprintId], references: [id])
+
+  @@index([printJobId])
+  @@map("print_failures")
+}
+
+model Reprint {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  originalJobId String  @db.Uuid
+  reason       String   @db.Text
+  requestedAt  DateTime @default(now())
+
+  failures PrintFailure[]
+
+  @@map("reprints")
+}
+
+// =============================================================================
+// MATERIALS & INVENTORY — Spool tracking
+// =============================================================================
+
+model Material {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @db.VarChar(100)  // e.g. "PLA+", "PETG", "TPU"
+  type        String   @db.VarChar(50)
+  colorHex    String?  @db.VarChar(7)
+  brand       String?  @db.VarChar(100)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  spoolInventory SpoolInventory[]
+  materialUsages MaterialUsage[]
+
+  @@map("materials")
+}
+
+model SpoolInventory {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  materialId  String   @db.Uuid
+  printerId   String?  @db.Uuid  // which printer it's loaded on (null = storage)
+  weightGrams Float    // total weight
+  remainingGrams Float // current remaining
+  purchasedAt DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  material Material        @relation(fields: [materialId], references: [id])
+  usages   MaterialUsage[]
+
+  @@index([materialId])
+  @@map("spool_inventory")
+}
+
+model MaterialUsage {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  spoolId       String   @db.Uuid
+  materialId    String   @db.Uuid
+  printJobId    String?  @db.Uuid
+  usedGrams     Float
+  recordedAt    DateTime @default(now())
+
+  spool    SpoolInventory @relation(fields: [spoolId], references: [id])
+  material Material       @relation(fields: [materialId], references: [id])
+
+  @@index([spoolId])
+  @@map("material_usages")
+}
+
+model MaintenanceLog {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  printerId   String   @db.Uuid
+  type        String   @db.VarChar(100)  // NOZZLE_CHANGE, BED_LEVEL, CALIBRATION, etc.
+  notes       String?  @db.Text
+  performedAt DateTime @default(now())
+  performedBy String?  @db.Uuid  // User.id
+
+  printer Printer @relation(fields: [printerId], references: [id])
+
+  @@index([printerId])
+  @@map("maintenance_logs")
+}
+
+// =============================================================================
+// AUDIT LOG — Append-only; no UPDATE or DELETE for app_user
+// =============================================================================
+
+model AuditLogEntry {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String   @db.Uuid
+  actorId       String?  @db.Uuid  // null = system action
+  actionKey     String   @db.VarChar(200)  // e.g. "quote.review.approved"
+  targetType    String?  @db.VarChar(100)  // e.g. "Quote"
+  targetId      String?  @db.Uuid
+  beforeState   Json?    // snapshot before mutation (sensitive fields redacted)
+  afterState    Json?    // snapshot after mutation (sensitive fields redacted)
+  correlationId String?  @db.VarChar(100)  // request trace ID
+  ipAddress     String?  @db.VarChar(45)
+  userAgent     String?  @db.Text
+  createdAt     DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  actor  User?  @relation("AuditActor", fields: [actorId], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, actorId])
+  @@index([tenantId, actionKey])
+  @@index([tenantId, targetType, targetId])
+  @@map("audit_log_entries")
+}
+
+// =============================================================================
+// NOTIFICATIONS — Email, Discord, in-app
+// =============================================================================
+
+model Notification {
+  id        String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String             @db.Uuid
+  channel   NotificationChannel
+  type      String             @db.VarChar(100)  // e.g. "order.status_changed"
+  status    NotificationStatus @default(QUEUED)
+  subject   String?            @db.VarChar(500)
+  body      String?            @db.Text
+  metadata  Json?
+  sentAt    DateTime?
+  failedAt  DateTime?
+  createdAt DateTime           @default(now())
+
+  user                 User                   @relation(fields: [userId], references: [id])
+  notificationCenter   NotificationCenterItem?
+
+  @@index([userId])
+  @@index([status])
+  @@map("notifications")
+}
+
+model NotificationCenterItem {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  notificationId String   @unique @db.Uuid
+  isRead         Boolean  @default(false)
+  readAt         DateTime?
+  createdAt      DateTime @default(now())
+
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@map("notification_center_items")
+}
