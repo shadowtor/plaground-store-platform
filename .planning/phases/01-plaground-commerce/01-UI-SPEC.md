@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: false
 preset: none
 created: 2026-03-25
+updated: 2026-03-25
 ---
 
 # Phase 1 — UI Design Contract
@@ -13,7 +14,8 @@ created: 2026-03-25
 > verified by gsd-ui-checker.
 >
 > **Source authority:** `specs/001-platform-foundation/frontend-design-brief.md` (primary),
-> CONTEXT.md (infrastructure decisions), REQUIREMENTS.md (success criteria).
+> CONTEXT.md (infrastructure decisions), REQUIREMENTS.md (success criteria),
+> `.planning/research/STACK.md` (technology confirmations).
 
 ---
 
@@ -22,16 +24,20 @@ created: 2026-03-25
 | Property | Value |
 |----------|-------|
 | Tool | shadcn/ui |
-| Preset | Not yet generated — run `npx shadcn init` before implementation begins |
+| Preset | Not yet generated — executor must run `npx shadcn init` before implementation begins |
 | Component library | Radix UI (via shadcn) |
 | Icon library | Lucide React |
 | Font — brand/display | Coolvetica (storefront hero, major category headings, brand moments) |
 | Font — UI body | Inter (highly legible grotesk; strong numerics; 400–700 weight range) |
+| CSS framework | Tailwind CSS v4 (CSS-native cascade layers; no purge config needed) |
+| Animation | Framer Motion 11.x |
+| Charts | Recharts (storefront-facing and basic admin KPIs); ECharts only if gauge/heatmap widgets are required in admin (Phase 2+) |
 
 **shadcn initialization note:** No `components.json` detected (greenfield repo). Before
 implementation begins, the executor must run `npx shadcn init` with the CSS variable strategy and
 confirm `components.json` is present. Use the neutral gray base palette; tokens are extended via
-CSS variables in `packages/ui/` as specified below.
+CSS variables in `packages/ui/` as specified below. All shadcn component source is copied into
+`packages/ui/` — it is not a runtime dependency.
 
 ---
 
@@ -92,7 +98,7 @@ Exceptions:
 
 **Admin typography rationale:** Tighter scale than storefront; emphasis via weight and spacing
 rather than size jumps. Strong numeric glyph rendering at 14px for dashboard KPI values is
-mandatory — Inter satisfies this.
+mandatory — Inter satisfies this requirement.
 
 ---
 
@@ -129,7 +135,7 @@ Accent reserved for:
 - "Add to cart" and "Get a quote" primary buttons
 - Active navigation item indicator
 - Product price display
-- "Instant estimate" badge background
+- "Instant Estimate" badge background
 - Link hover underline on product and category titles
 - Primary CTA in hero sections
 
@@ -174,13 +180,13 @@ Accent reserved for:
 
 **Yellow (`#FBC70E`) reserved for admin:**
 - Manual review required badge
-- Expiring payment authorization warning
+- Expiring payment authorization warning (see Stripe auth window pattern below)
 - Degraded connector status
 - Never used decoratively
 
 ### Status Encoding (both surfaces)
 
-Status is always communicated with shape + label + color, never color alone:
+Status is always communicated with shape + label + color, never color alone (WCAG AA requirement):
 
 | Status | Color | Shape | Label |
 |--------|-------|-------|-------|
@@ -191,6 +197,7 @@ Status is always communicated with shape + label + color, never color alone:
 | Rejected / Failed | Red `#EF4444` | Filled chip | "Rejected" |
 | Instant Estimate | Blue `#005EB0` | Outlined chip | "Instant Estimate" |
 | Manual Review | Yellow `#FBC70E` | Outlined chip | "Manual Review" |
+| Auth Expiring | Yellow `#FBC70E` | Outlined chip with clock icon | "Auth expires in Xd" |
 
 ---
 
@@ -216,7 +223,7 @@ Status is always communicated with shape + label + color, never color alone:
 
 - Primary buttons do not change semantic meaning based on surface context.
 - Destructive buttons are red on both surfaces. No exceptions.
-- All buttons must have a visible focus ring (2px offset, brand accent color).
+- All buttons must have a visible focus ring (2px solid brand accent color, 2px offset).
 
 ### Inputs
 
@@ -234,10 +241,23 @@ Status is always communicated with shape + label + color, never color alone:
 | Page route transitions | 200–260ms |
 | Upload progress, quote compute | Indeterminate with labeled progress bar |
 
-- All motion uses Framer Motion.
+- All motion uses Framer Motion 11.x.
 - Skeletons must match the final layout geometry before content loads.
 - Chart animations trigger only on first mount or filter change — never loop.
-- Respect `prefers-reduced-motion` — disable non-essential animations.
+- Tooltips are crisp; crosshair/hover states subtle.
+- Charts use neutral tones + one accent series highlight only (PLA Blue for admin, PLA Red for storefront).
+- Respect `prefers-reduced-motion` — disable all non-essential animations when set.
+
+### Charts (Admin KPI Dashboard)
+
+- Library: Recharts (wrapped in `packages/ui` as `<KpiLineChart>`, `<KpiBarChart>`, `<KpiDonutChart>`).
+- Chart wrapper components are in `packages/ui/` — neither `apps/web-admin` nor `apps/web-storefront` import Recharts directly.
+- Color series: use neutral zinc tones for secondary series; PLA Blue (`#005EB0`) for the primary/key series.
+- Grid lines: subtle zinc-800 (`#27272A`) horizontal lines only; no vertical grid lines.
+- Tooltip background: `#1A1A1A`; border `#2A2A2A`; text `#F4F4F5`.
+- Animate on first mount only. No looping.
+- Every chart must have a text-based fallback accessible title (`aria-label`).
+- Crosshair on hover: thin 1px zinc-600 line; dot indicator on active series point.
 
 ---
 
@@ -252,20 +272,59 @@ Status is always communicated with shape + label + color, never color alone:
 - Checkout: single-column on mobile, two-column (form + summary) at ≥768px.
 - Mobile-first: primary CTA visible above fold on all key screens.
 
+### Storefront — Product Card
+
+- One strong image (aspect ratio 4:3, object-fit cover).
+- Tight product title (max 2 lines, truncate).
+- Short spec line (material, color — max 1 line, muted).
+- Price in accent color; lead time below price in muted text.
+- Optional material badge: small, muted chip in top-left corner.
+- Hover reveals "Quick add" and "View details" actions — no modal overlay.
+
+### Storefront — Product Detail Page (PDP)
+
+- Image gallery first (left column ≥768px).
+- Stable buy box (right column): options → material/color first, then size/variant, then quantity.
+- Trust blocks below buy box: shipping, QA, support, returns.
+
 ### Admin Dashboard
 
-- Left rail navigation: 240px collapsed to icon-only at 64px on small screens.
+- Left rail navigation: 240px wide; collapses to icon-only (64px) at screens <1280px.
+- Nav sections: Orders, Quotes, Products, Customers, Inventory, Settings.
 - Content area: 12-column grid, 24px gutters.
-- Queue tables: full width with sticky headers.
+- Queue tables: full width with sticky headers, row density toggle.
 - KPI cards: 4-column grid at ≥1280px, 2-column at ≥768px, 1-column on mobile.
 - Detail drawers: 480px wide, slide in from right, overlay on mobile.
+- Quick actions in table rows aligned to the right column.
+
+### Admin — Operational Clarity Rule
+
+Every admin screen must visually answer three questions in order:
+1. **"What needs attention right now?"** — queue depth, expiring auth windows, manual review flags are prominently surfaced at the top.
+2. **"What changed?"** — audit trail and status timeline visible without navigating away.
+3. **"What action is safe to take next?"** — the primary action button is always the blue accent; destructive actions are always secondary/ghost until confirmed.
+
+---
+
+## Stripe Auth Window Pattern
+
+The Stripe payment authorization capture window is 5 days (Visa, post-April 2024). The admin queue must surface expiring authorizations before they lapse.
+
+| Time to expiry | Visual treatment |
+|----------------|-----------------|
+| > 72 hours | No indicator |
+| 48–72 hours | Yellow chip "Auth expires in Xd" next to order row |
+| < 48 hours | Yellow chip + row highlighted with zinc-800 left border accent |
+| Expired | Red chip "Auth expired" + order blocked from capture; action: "Re-authorize" |
+
+This warning pattern uses the yellow (`#FBC70E`) semantic slot — never a new color.
 
 ---
 
 ## Four-State Contract
 
 Every surface that loads or mutates data must implement all four states. This is a hard requirement
-from CLAUDE.md.
+from CLAUDE.md conventions.
 
 ### Loading
 
@@ -276,6 +335,7 @@ from CLAUDE.md.
 | Admin queue table | Row skeletons with correct column widths |
 | KPI dashboard | Widget skeletons at correct card dimensions |
 | File upload | Progress bar with labeled stage ("Uploading...", "Scanning...", "Analyzing...") |
+| Chart widgets | Skeleton at chart card dimensions; no spinner |
 
 ### Empty
 
@@ -375,18 +435,27 @@ The badge on quote results must always read "Instant Estimate" (not "Auto Quote"
 The portal must display: "This is an instant estimate based on your model dimensions and materials.
 Final price is confirmed at order placement."
 
+### MFA Prompt Copy (Admin — AUTH-05)
+
+| Context | Heading | Body | CTA |
+|---------|---------|------|-----|
+| TOTP prompt | "Verify your identity" | "Enter the 6-digit code from your authenticator app." | "Verify" |
+| Passkey prompt | "Use your passkey" | "Authenticate using your registered passkey to continue." | "Authenticate" |
+| MFA setup required | "Set up two-factor authentication" | "Admin accounts require MFA. Set up an authenticator app or passkey to continue." | "Set up now" |
+
 ---
 
 ## Accessibility Contract
 
 - Color contrast minimum: 4.5:1 for normal text, 3:1 for large text and UI components (WCAG AA).
-- Focus rings: visible on all interactive elements, 2px solid, 2px offset.
+- Focus rings: visible on all interactive elements, 2px solid brand accent, 2px offset.
 - All form inputs have associated `<label>` elements — no aria-label substitutes unless input is
   genuinely icon-only.
 - Status chips always use both color and label text — never color alone.
 - Keyboard-navigable: all interactive flows completable without a pointer device.
 - `aria-live` regions on quote progress, file upload progress, and async form submission feedback.
 - Reduced motion: all Framer Motion animations respect `prefers-reduced-motion`.
+- Charts: every chart has an `aria-label` describing the data represented.
 
 ---
 
@@ -412,19 +481,25 @@ required.
 | Admin dark mode elevation model (#121212, #1A1A1A, #222222) | `frontend-design-brief.md` |
 | Spacing: 8px grid | `frontend-design-brief.md` |
 | Coolvetica for display/brand, grotesk for UI | `frontend-design-brief.md` |
-| Border radius 10–12px default, 6px chips, 16px hero | `frontend-design-brief.md` |
-| Motion durations: 120–180ms micro, 180–260ms panel | `frontend-design-brief.md` |
+| Border radius 10px default, 6px chips, 16px hero | `frontend-design-brief.md` |
+| Motion durations: 120–150ms micro, 180–260ms panel | `frontend-design-brief.md` |
 | Skeleton-first loading; layout-matching | `frontend-design-brief.md` |
 | Empty state: why + what to do + single CTA | `frontend-design-brief.md` |
 | Error: human-readable + safe next step + copy-details | `frontend-design-brief.md` |
 | Light/dark mode behavior (storefront: system pref; admin: dark-first) | `frontend-design-brief.md` |
-| Mobile-first storefront; responsive admin | REQUIREMENTS.md STORE-04, additional_context |
+| Mobile-first storefront; responsive admin | REQUIREMENTS.md STORE-04 |
 | Status via shape + label + color (not color alone) | `frontend-design-brief.md` |
-| shadcn/ui + Radix + Tailwind CSS | CLAUDE.md, CONTEXT.md, additional_context |
-| Lucide React icons | Ecosystem default for shadcn — confirmed default |
-| Inter font for UI body | This session — satisfies grotesk + strong numerics requirement |
+| shadcn/ui + Radix + Tailwind CSS | CLAUDE.md, CONTEXT.md |
+| Tailwind CSS v4 (CSS-native layers, no purge config) | `.planning/research/STACK.md` |
+| Recharts as default chart library; ECharts only for advanced widgets | `.planning/research/STACK.md` |
+| Charts wrapped in packages/ui primitives | `.planning/codebase/STACK.md` |
+| Lucide React icons | Ecosystem default for shadcn |
+| Inter font for UI body | Satisfies grotesk + strong numerics requirement |
 | Four-state contract (loading/empty/success/error) | CLAUDE.md conventions |
-| Keyboard-friendly, WCAG AA | CLAUDE.md conventions, additional_context |
+| Keyboard-friendly, WCAG AA | CLAUDE.md conventions |
+| Stripe auth window warning pattern (5-day window, yellow indicator) | `.planning/STATE.md` blocker note |
+| Admin operational clarity rule (what needs attention / what changed / what's safe) | `frontend-design-brief.md` implementation guardrails |
+| MFA copy contract (admin AUTH-05) | REQUIREMENTS.md AUTH-05 |
 
 ---
 
