@@ -12,7 +12,7 @@ SaaS. Phase 4 packages the platform for self-hosted distribution.
 
 ## Phases
 
-- [ ] **Phase 1: PLAground Commerce** - Full storefront, customer portal, payments, admin dashboard, and notifications — PLAground is open for business
+- [x] **Phase 1: PLAground Commerce** - Full storefront, customer portal, payments, admin dashboard, and notifications — PLAground is open for business (completed 2026-03-25)
 - [ ] **Phase 2: PLAground Fulfillment** - BambuLab connector, OrcaSlicer auto-slicing, printer telemetry, and admin dispatch — the shop runs autonomously from quote to print
 - [ ] **Phase 3: [SaaS Platform]** - Multi-tenant SaaS tier opened to other shops — self-serve signup, subdomain provisioning, plan entitlements, and super-admin panel
 - [ ] **Phase 4: Self-Hosted Distribution** - Docker Compose bundle and interactive installer for technical/hobbyist operators
@@ -82,7 +82,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. PLAground Commerce | 1/3 | In Progress|  |
+| 1. PLAground Commerce | 3/3 | Complete   | 2026-03-25 |
 | 2. PLAground Fulfillment | 0/TBD | Not started | - |
 | 3. [SaaS Platform] | 0/TBD | Not started | - |
 | 4. Self-Hosted Distribution | 0/TBD | Not started | - |

@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to execute
-stopped_at: Completed 01-01-PLAN.md — monorepo foundation
-last_updated: "2026-03-25T22:47:03.286Z"
+stopped_at: Completed 01-02-PLAN.md — auth, RBAC, and MFA
+last_updated: "2026-03-25T23:02:35.166Z"
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-25)
 ## Current Position
 
 Phase: 01 (plaground-commerce) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 
 ## Performance Metrics
 
@@ -47,6 +47,7 @@ Plan: 2 of 3
 
 *Updated after each plan completion*
 | Phase 01 P01 | 13 | 4 tasks | 39 files |
+| Phase 01 P02 | 12 minutes | 3 tasks | 27 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,9 @@ Recent decisions affecting current work:
 - [Phase 01]: RLS enforced via app_user role + SET LOCAL app.current_tenant_id per transaction (never via postgres superuser which bypasses RLS)
 - [Phase 01]: Full 38-entity Prisma schema defined in Phase 1 — no incremental entity additions in later phases
 - [Phase 01]: Connector message schemas use Zod discriminated union on type field — both api and connector import from packages/contracts
+- [Phase 01]: Argon2id with 64MB memory cost for password hashing (OWASP recommended, GPU-resistant)
+- [Phase 01]: MFA challenge token pattern bridges password-verified to TOTP-verified without issuing a full session mid-flow
+- [Phase 01]: TOTP secrets encrypted at rest with AES-256-GCM — DB compromise alone does not expose TOTP seeds
 
 ### Pending Todos
 
@@ -78,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-25T22:47:03.274Z
-Stopped at: Completed 01-01-PLAN.md — monorepo foundation
+Last session: 2026-03-25T23:02:35.153Z
+Stopped at: Completed 01-02-PLAN.md — auth, RBAC, and MFA
 Resume file: None

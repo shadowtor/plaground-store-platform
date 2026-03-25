@@ -16,12 +16,12 @@
 
 ### Authentication & Accounts
 
-- [ ] **AUTH-01**: Customer can register with email and password
-- [ ] **AUTH-02**: Customer can log in with email/password and stay logged in across sessions
-- [ ] **AUTH-03**: Customer can reset password via email link
-- [ ] **AUTH-04**: Customer can log in or link account via Discord OAuth
-- [ ] **AUTH-05**: Admin accounts require MFA (TOTP or passkeys) — enforced, not optional
-- [ ] **AUTH-06**: Admin has shorter session lifetime and inactivity timeout than customer sessions
+- [x] **AUTH-01**: Customer can register with email and password
+- [x] **AUTH-02**: Customer can log in with email/password and stay logged in across sessions
+- [x] **AUTH-03**: Customer can reset password via email link
+- [x] **AUTH-04**: Customer can log in or link account via Discord OAuth
+- [x] **AUTH-05**: Admin accounts require MFA (TOTP or passkeys) — enforced, not optional
+- [x] **AUTH-06**: Admin has shorter session lifetime and inactivity timeout than customer sessions
 
 ### Customer Portal
 
@@ -48,7 +48,7 @@
 - [ ] **ADMIN-05**: Admin can create and manage products, categories, pricing rules, and variants
 - [ ] **ADMIN-06**: Admin can manage materials and spool inventory with estimated vs actual usage tracking
 - [ ] **ADMIN-07**: All privileged admin actions produce immutable, queryable audit log entries (actor, action, before/after, timestamp)
-- [ ] **ADMIN-08**: Role-based access control with deny-by-default (roles: Admin, Staff, ConnectorNode)
+- [x] **ADMIN-08**: Role-based access control with deny-by-default (roles: Admin, Staff, ConnectorNode)
 
 ### Print Fulfillment
 
@@ -148,12 +148,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | Infrastructure (RLS, tenant_id, audit log, contracts, Docker dev env) | Phase 1 — PLAground Commerce | Pending |
-| AUTH-01 | Phase 1 — PLAground Commerce | Pending |
-| AUTH-02 | Phase 1 — PLAground Commerce | Pending |
-| AUTH-03 | Phase 1 — PLAground Commerce | Pending |
-| AUTH-04 | Phase 1 — PLAground Commerce | Pending |
-| AUTH-05 | Phase 1 — PLAground Commerce | Pending |
-| AUTH-06 | Phase 1 — PLAground Commerce | Pending |
+| AUTH-01 | Phase 1 — PLAground Commerce | Complete |
+| AUTH-02 | Phase 1 — PLAground Commerce | Complete |
+| AUTH-03 | Phase 1 — PLAground Commerce | Complete |
+| AUTH-04 | Phase 1 — PLAground Commerce | Complete |
+| AUTH-05 | Phase 1 — PLAground Commerce | Complete |
+| AUTH-06 | Phase 1 — PLAground Commerce | Complete |
 | STORE-01 | Phase 1 — PLAground Commerce | Pending |
 | STORE-02 | Phase 1 — PLAground Commerce | Pending |
 | STORE-03 | Phase 1 — PLAground Commerce | Pending |
@@ -177,7 +177,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ADMIN-05 | Phase 1 — PLAground Commerce | Pending |
 | ADMIN-06 | Phase 1 — PLAground Commerce | Pending |
 | ADMIN-07 | Phase 1 — PLAground Commerce | Pending |
-| ADMIN-08 | Phase 1 — PLAground Commerce | Pending |
+| ADMIN-08 | Phase 1 — PLAground Commerce | Complete |
 | NOTIF-01 | Phase 1 — PLAground Commerce | Pending |
 | NOTIF-02 | Phase 1 — PLAground Commerce | Pending |
 | NOTIF-03 | Phase 1 — PLAground Commerce | Pending |
