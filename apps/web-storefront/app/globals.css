@@ -1,0 +1,55 @@
+/**
+ * PLAground Storefront — Global CSS
+ *
+ * Imports design system tokens from packages/ui and sets up Tailwind v4.
+ * CSS variable tokens ensure no layout flash on theme switch.
+ */
+
+@import "tailwindcss";
+
+/* Design system tokens from packages/ui */
+@import "../../packages/ui/src/tokens/colors.css";
+@import "../../packages/ui/src/tokens/typography.css";
+@import "../../packages/ui/src/tokens/spacing.css";
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-family: var(--font-family-ui, "Inter", system-ui, sans-serif);
+    font-size: var(--font-size-body, 1rem);
+    line-height: var(--line-height-body, 1.5);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent layout flash — start with system preference via CSS */
+    color-scheme: light dark;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    min-height: 100dvh;
+  }
+
+  /* Respect prefers-reduced-motion — disable all non-essential animations */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Coolvetica font — display/brand use for storefront hero and major headings */
+  @font-face {
+    font-family: "Coolvetica";
+    src: url("/fonts/coolvetica-rg.woff2") format("woff2");
+    font-weight: 400 700;
+    font-style: normal;
+    font-display: swap;
+  }
+}
