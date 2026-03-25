@@ -1,0 +1,79 @@
+/**
+ * PLAground Admin Dashboard — Global CSS
+ *
+ * Dark-first design. CSS variable tokens define the admin color palette.
+ * Storefront tokens are intentionally NOT imported here — admin uses its own token set.
+ */
+
+@import "tailwindcss";
+
+/* Admin dark-first design tokens */
+@layer base {
+  :root {
+    /* Admin always dark — no light mode toggle for admin surface */
+    --background: #121212;
+    --background-subtle: #1a1a1a;
+    --background-elevated: #222222;
+    --foreground: #f4f4f5;
+    --foreground-muted: #a1a1aa;
+    --border: #2a2a2a;
+    --input: #1a1a1a;
+
+    /* PLA Blue — admin accent (approved, positive, primary actions) */
+    --accent: #005eb0;
+    --accent-foreground: #ffffff;
+
+    /* Status colors */
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --success: #22c55e;
+    --warning: #fbc70e;
+
+    /* Border radius */
+    --radius: 10px;
+    --radius-sm: 6px;
+    --radius-lg: 16px;
+
+    /* Typography */
+    --font-family-ui: "Inter", system-ui, sans-serif;
+    --font-size-page-heading: 1.25rem;   /* 20px */
+    --font-size-section-heading: 0.875rem; /* 14px */
+    --font-size-body: 0.875rem;           /* 14px */
+    --font-size-label: 0.75rem;           /* 12px */
+    --font-weight-regular: 400;
+    --font-weight-semibold: 600;
+    --line-height-heading: 1.3;
+    --line-height-body: 1.5;
+    --line-height-label: 1.4;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-family: var(--font-family-ui);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    min-height: 100dvh;
+  }
+
+  /* Respect prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
