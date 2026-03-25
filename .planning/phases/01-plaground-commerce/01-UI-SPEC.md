@@ -79,22 +79,30 @@ Exceptions:
 
 ### Storefront + Customer Portal
 
+4 sizes, 2 weights. Subsection hierarchy is expressed through weight contrast (700 vs 400), not
+additional size steps.
+
 | Role | Font | Size | Weight | Line Height |
 |------|------|------|--------|-------------|
-| Display (hero, brand moments) | Coolvetica | 48px / 56px (desktop) | 700 | 1.1 |
-| Heading (h1 section) | Inter | 32px | 700 | 1.2 |
-| Heading (h2 subsection) | Inter | 20px | 600 | 1.3 |
+| Display (hero, brand moments) | Coolvetica | 48px | 700 | 1.1 |
+| Heading h1 (section headings, h2 subsections) | Inter | 32px | 700 | 1.2 |
 | Body | Inter | 16px | 400 | 1.5 |
-| Label / meta / badge | Inter | 14px | 500 | 1.4 |
+| Label / meta / badge | Inter | 14px | 400 | 1.4 |
+
+**Subsection differentiation note:** h2-level subsections use 32px at weight 700 identically to
+h1. Visual hierarchy between h1 and h2 is achieved through spacing context (larger top margin on
+h1), not a separate font size. This keeps the scale at exactly 4 declared sizes.
 
 ### Admin Dashboard
+
+2 sizes, 2 weights. Emphasis via weight and spacing, not size jumps.
 
 | Role | Font | Size | Weight | Line Height |
 |------|------|------|--------|-------------|
 | Page heading | Inter | 20px | 600 | 1.3 |
 | Section heading / table header | Inter | 14px | 600 | 1.4 |
 | Body / table cell | Inter | 14px | 400 | 1.5 |
-| Label / metadata / badge | Inter | 12px | 500 | 1.4 |
+| Label / metadata / badge | Inter | 12px | 400 | 1.4 |
 
 **Admin typography rationale:** Tighter scale than storefront; emphasis via weight and spacing
 rather than size jumps. Strong numeric glyph rendering at 14px for dashboard KPI values is
@@ -500,6 +508,7 @@ required.
 | Stripe auth window warning pattern (5-day window, yellow indicator) | `.planning/STATE.md` blocker note |
 | Admin operational clarity rule (what needs attention / what changed / what's safe) | `frontend-design-brief.md` implementation guardrails |
 | MFA copy contract (admin AUTH-05) | REQUIREMENTS.md AUTH-05 |
+| Typography collapsed to 4 sizes (storefront), 2 sizes (admin); 2 weights per surface | gsd-ui-checker revision 2026-03-25 |
 
 ---
 
