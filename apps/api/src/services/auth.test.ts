@@ -1,21 +1,37 @@
 /**
- * Auth service unit tests — Wave 0 stubs
+ * Auth service unit tests
  *
  * Covers: AUTH-01 (registration), AUTH-02 (login/logout), AUTH-03 (password reset)
- *
- * Status: STUB — implementation in 01-02-PLAN.md (Auth plan)
- * These tests define the expected behavior contracts before implementation.
  *
  * Run: pnpm --filter api exec vitest run src/services/auth.test.ts
  */
 
 import { describe, expect, it } from "vitest";
+import {
+  EmailAlreadyRegisteredError,
+  InvalidCredentialsError,
+  InvalidResetTokenError,
+  WeakPasswordError,
+  MfaRequiredError,
+} from "./auth/index.js";
 
 // =============================================================================
-// AUTH-01: Customer registration
+// AUTH-01: Customer registration — error types contract
 // =============================================================================
 
 describe("AuthService.register", () => {
+  it("exports EmailAlreadyRegisteredError", () => {
+    const err = new EmailAlreadyRegisteredError();
+    expect(err.code).toBe("EMAIL_ALREADY_REGISTERED");
+    expect(err.message).toContain("already registered");
+  });
+
+  it("exports WeakPasswordError", () => {
+    const err = new WeakPasswordError();
+    expect(err.code).toBe("WEAK_PASSWORD");
+    expect(err.message).toContain("12 characters");
+  });
+
   it.todo("registers a new customer with email and password");
   it.todo("hashes password with Argon2 before storing");
   it.todo("creates a pending email verification record");
@@ -27,10 +43,23 @@ describe("AuthService.register", () => {
 });
 
 // =============================================================================
-// AUTH-02: Login / logout
+// AUTH-02: Login / logout — error types contract
 // =============================================================================
 
 describe("AuthService.login", () => {
+  it("exports InvalidCredentialsError", () => {
+    const err = new InvalidCredentialsError();
+    expect(err.code).toBe("INVALID_CREDENTIALS");
+    // Must not reveal whether email exists
+    expect(err.message).not.toContain("email");
+  });
+
+  it("exports MfaRequiredError with challenge token", () => {
+    const err = new MfaRequiredError("test-challenge-token");
+    expect(err.code).toBe("MFA_REQUIRED");
+    expect(err.mfaChallengeToken).toBe("test-challenge-token");
+  });
+
   it.todo("returns a session token on valid credentials");
   it.todo("verifies Argon2 hash against stored passwordHash");
   it.todo("rejects login for unverified email");
@@ -48,7 +77,7 @@ describe("AuthService.logout", () => {
 });
 
 // =============================================================================
-// AUTH-03: Password reset
+// AUTH-03: Password reset — error types contract
 // =============================================================================
 
 describe("AuthService.requestPasswordReset", () => {
@@ -59,6 +88,11 @@ describe("AuthService.requestPasswordReset", () => {
 });
 
 describe("AuthService.completePasswordReset", () => {
+  it("exports InvalidResetTokenError", () => {
+    const err = new InvalidResetTokenError();
+    expect(err.code).toBe("INVALID_RESET_TOKEN");
+  });
+
   it.todo("updates the password hash on valid token");
   it.todo("invalidates the reset token after use");
   it.todo("rejects expired tokens");

@@ -9,3 +9,4 @@
 
 export * from "./connector/index.js";
 export * from "./openapi/index.js";
+export * from "./auth/index.js";
