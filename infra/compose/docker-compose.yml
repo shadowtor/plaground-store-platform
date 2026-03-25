@@ -1,0 +1,280 @@
+version: "3.9"
+
+# =============================================================================
+# PLAground Platform — Docker Compose Dev Stack
+# =============================================================================
+# Start: docker compose up -d (all services start in dependency order)
+# Stop:  docker compose down
+# Reset: docker compose down -v && docker compose up -d
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL — primary database
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:17.4-alpine
+    container_name: plaground-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-plaground}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-plaground}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - internal
+
+  # ---------------------------------------------------------------------------
+  # PgBouncer — connection pooler (transaction mode)
+  # Required for Prisma multi-process connection management under load
+  # NOTE: transaction pooling disables LISTEN/NOTIFY and prepared statements
+  # ---------------------------------------------------------------------------
+  pgbouncer:
+    image: edoburu/pgbouncer:1.23.1
+    container_name: plaground-pgbouncer
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-plaground}
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 200
+      DEFAULT_POOL_SIZE: 20
+      ADMIN_USERS: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 5432 -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - internal
+
+  # ---------------------------------------------------------------------------
+  # Redis — BullMQ job queue + session cache + rate limiting
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7.4.2-alpine
+    container_name: plaground-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      - internal
+
+  # ---------------------------------------------------------------------------
+  # MinIO — S3-compatible object storage emulator
+  # Mimics Cloudflare R2 / AWS S3 for dev. Private buckets only.
+  # ---------------------------------------------------------------------------
+  minio:
+    image: minio/minio:RELEASE.2025-03-12T18-04-18Z
+    container_name: plaground-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:-minioadmin}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    networks:
+      - internal
+
+  # ---------------------------------------------------------------------------
+  # Mailpit — SMTP mail catcher for dev
+  # UI at http://localhost:8025; SMTP at localhost:1025
+  # ---------------------------------------------------------------------------
+  mailpit:
+    image: axllent/mailpit:v1.22.3
+    container_name: plaground-mailpit
+    restart: unless-stopped
+    environment:
+      MP_MAX_MESSAGES: 500
+      MP_SMTP_AUTH_ACCEPT_ANY: true
+      MP_SMTP_AUTH_ALLOW_INSECURE: true
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - internal
+
+  # ---------------------------------------------------------------------------
+  # API — Fastify server (domain logic, auth, RBAC, OpenAPI)
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: ../../
+      dockerfile: infra/docker/api.Dockerfile
+      target: dev
+    container_name: plaground-api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://app_user:app_password@pgbouncer:5432/plaground}
+      DIRECT_DATABASE_URL: ${DIRECT_DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/plaground}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      SESSION_SECRET: ${SESSION_SECRET}
+      CSRF_SECRET: ${CSRF_SECRET}
+      S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-minioadmin}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-minioadmin}
+      S3_BUCKET_UPLOADS: ${S3_BUCKET_UPLOADS:-plaground-uploads}
+      S3_BUCKET_INVOICES: ${S3_BUCKET_INVOICES:-plaground-invoices}
+      S3_BUCKET_ASSETS: ${S3_BUCKET_ASSETS:-plaground-assets}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET}
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@plaground.io}
+      CONNECTOR_ENROLLMENT_SECRET: ${CONNECTOR_ENROLLMENT_SECRET}
+      NODE_ENV: ${NODE_ENV:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      API_PORT: ${API_PORT:-4000}
+      DEPLOYMENT_MODE: ${DEPLOYMENT_MODE:-saas}
+    volumes:
+      - ../../apps/api:/app/apps/api
+      - ../../packages:/app/packages
+    ports:
+      - "${API_PORT:-4000}:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pgbouncer:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - internal
+
+  # ---------------------------------------------------------------------------
+  # Worker — BullMQ background job processor
+  # ---------------------------------------------------------------------------
+  worker:
+    build:
+      context: ../../
+      dockerfile: infra/docker/worker.Dockerfile
+      target: dev
+    container_name: plaground-worker
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://app_user:app_password@pgbouncer:5432/plaground}
+      DIRECT_DATABASE_URL: ${DIRECT_DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/plaground}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-minioadmin}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-minioadmin}
+      S3_BUCKET_UPLOADS: ${S3_BUCKET_UPLOADS:-plaground-uploads}
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@plaground.io}
+      NODE_ENV: ${NODE_ENV:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DEPLOYMENT_MODE: ${DEPLOYMENT_MODE:-saas}
+    volumes:
+      - ../../apps/worker:/app/apps/worker
+      - ../../packages:/app/packages
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pgbouncer:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - internal
+
+  # ---------------------------------------------------------------------------
+  # Web Storefront — Next.js public storefront and customer portal
+  # ---------------------------------------------------------------------------
+  web-storefront:
+    build:
+      context: ../../
+      dockerfile: infra/docker/web-storefront.Dockerfile
+      target: dev
+    container_name: plaground-web-storefront
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+      NODE_ENV: ${NODE_ENV:-development}
+    volumes:
+      - ../../apps/web-storefront:/app/apps/web-storefront
+      - ../../packages:/app/packages
+    ports:
+      - "${STOREFRONT_PORT:-3000}:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - internal
+
+  # ---------------------------------------------------------------------------
+  # Web Admin — Next.js internal operations dashboard
+  # ---------------------------------------------------------------------------
+  web-admin:
+    build:
+      context: ../../
+      dockerfile: infra/docker/web-admin.Dockerfile
+      target: dev
+    container_name: plaground-web-admin
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_ADMIN_API_URL: ${NEXT_PUBLIC_ADMIN_API_URL:-http://localhost:4000}
+      NODE_ENV: ${NODE_ENV:-development}
+    volumes:
+      - ../../apps/web-admin:/app/apps/web-admin
+      - ../../packages:/app/packages
+    ports:
+      - "${ADMIN_PORT:-3001}:3001"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - internal
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+
+networks:
+  internal:
+    driver: bridge
