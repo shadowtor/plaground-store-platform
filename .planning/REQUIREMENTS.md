@@ -7,12 +7,12 @@
 
 ### Storefront
 
-- [ ] **STORE-01**: Guest can browse product catalog with category navigation, search, and filters
-- [ ] **STORE-02**: Guest can view product detail pages including variants, pricing, lead times, and images
+- [x] **STORE-01**: Guest can browse product catalog with category navigation, search, and filters
+- [x] **STORE-02**: Guest can view product detail pages including variants, pricing, lead times, and images
 - [ ] **STORE-03**: Guest can add items to cart and complete checkout (catalog orders, no account required)
-- [ ] **STORE-04**: Storefront supports light and dark mode with premium visual quality
-- [ ] **STORE-05**: Storefront is SEO-friendly (clean URLs, meta tags, structured data, SSR)
-- [ ] **STORE-06**: Login-free contact form available on the storefront
+- [x] **STORE-04**: Storefront supports light and dark mode with premium visual quality
+- [x] **STORE-05**: Storefront is SEO-friendly (clean URLs, meta tags, structured data, SSR)
+- [x] **STORE-06**: Login-free contact form available on the storefront
 
 ### Authentication & Accounts
 
@@ -154,12 +154,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-04 | Phase 1 — PLAground Commerce | Complete |
 | AUTH-05 | Phase 1 — PLAground Commerce | Complete |
 | AUTH-06 | Phase 1 — PLAground Commerce | Complete |
-| STORE-01 | Phase 1 — PLAground Commerce | Pending |
-| STORE-02 | Phase 1 — PLAground Commerce | Pending |
+| STORE-01 | Phase 1 — PLAground Commerce | Complete |
+| STORE-02 | Phase 1 — PLAground Commerce | Complete |
 | STORE-03 | Phase 1 — PLAground Commerce | Pending |
-| STORE-04 | Phase 1 — PLAground Commerce | Pending |
-| STORE-05 | Phase 1 — PLAground Commerce | Pending |
-| STORE-06 | Phase 1 — PLAground Commerce | Pending |
+| STORE-04 | Phase 1 — PLAground Commerce | Complete |
+| STORE-05 | Phase 1 — PLAground Commerce | Complete |
+| STORE-06 | Phase 1 — PLAground Commerce | Complete |
 | PAY-01 | Phase 1 — PLAground Commerce | Pending |
 | PAY-02 | Phase 1 — PLAground Commerce | Pending |
 | PAY-03 | Phase 1 — PLAground Commerce | Pending |
