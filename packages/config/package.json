@@ -1,0 +1,26 @@
+{
+  "name": "packages/config",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Zod-based env validation schemas per service — fails fast on startup if vars are missing",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./api": "./src/api.ts",
+    "./worker": "./src/worker.ts",
+    "./storefront": "./src/storefront.ts",
+    "./admin": "./src/admin.ts",
+    "./connector": "./src/connector.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "@types/node": "^22.14.0"
+  }
+}

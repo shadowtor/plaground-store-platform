@@ -1,0 +1,25 @@
+{
+  "name": "packages/contracts",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Generated OpenAPI TypeScript types and connector message schemas",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./connector": "./src/connector/index.ts",
+    "./openapi": "./src/openapi/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "contracts:generate": "node scripts/generate.mjs"
+  },
+  "dependencies": {
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "openapi-typescript": "^7.8.0",
+    "@types/node": "^22.14.0"
+  }
+}
