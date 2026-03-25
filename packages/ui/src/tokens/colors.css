@@ -1,0 +1,92 @@
+/**
+ * PLAground Design System — Color Tokens
+ *
+ * Brand palette and semantic color roles for all surfaces.
+ * Source authority: Phase 1 UI Design Contract (01-UI-SPEC.md)
+ *
+ * Usage invariant: Ribbon colors (red, blue, yellow) are accents only.
+ * Never use them as full-page fills or large background surfaces.
+ */
+
+@layer base {
+  :root {
+    /* -------------------------------------------------------------------------
+     * Brand palette — invariant across all surfaces
+     * ---------------------------------------------------------------------- */
+    --pla-red: #b81d20;
+    --pla-blue: #005eb0;
+    --pla-yellow: #fbc70e;
+    --pla-ink: #181818;
+    --pla-paper: #ffffff;
+
+    /* -------------------------------------------------------------------------
+     * Storefront — Light mode (default / primary)
+     * ---------------------------------------------------------------------- */
+    --background: #ffffff;
+    --background-subtle: #f4f4f5;
+    --foreground: #181818;
+    --foreground-muted: #71717a;
+    --border: #e4e4e7;
+    --accent: #b81d20;
+    --accent-foreground: #ffffff;
+    --destructive: #b81d20;
+    --destructive-foreground: #ffffff;
+    --card: #ffffff;
+    --card-foreground: #181818;
+    --input: #f4f4f5;
+    --ring: #b81d20;
+  }
+
+  /* -------------------------------------------------------------------------
+   * Storefront — Dark mode
+   * ---------------------------------------------------------------------- */
+  .dark {
+    --background: #121212;
+    --background-subtle: #1c1c1e;
+    --foreground: #f4f4f5;
+    --foreground-muted: #a1a1aa;
+    --border: #27272a;
+    --accent: #b81d20;
+    --accent-foreground: #ffffff;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --card: #1c1c1e;
+    --card-foreground: #f4f4f5;
+    --input: #1c1c1e;
+    --ring: #b81d20;
+  }
+
+  /* -------------------------------------------------------------------------
+   * Admin Dashboard — Dark-first
+   * Surface uses elevation layering: #121212 → #1a1a1a → #222222
+   * ---------------------------------------------------------------------- */
+  .admin-dark {
+    --background: #121212;
+    --background-subtle: #1a1a1a;
+    --background-elevated: #222222;
+    --foreground: #f4f4f5;
+    --foreground-muted: #a1a1aa;
+    --border: #2a2a2a;
+    --accent: #005eb0;
+    --accent-foreground: #ffffff;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --card: #1a1a1a;
+    --card-foreground: #f4f4f5;
+    --input: #222222;
+    --ring: #005eb0;
+
+    /* Admin-specific semantic colors */
+    --success: #22c55e;
+    --success-foreground: #ffffff;
+    --warning: #fbc70e;
+    --warning-foreground: #181818;
+
+    /* Status chip colors (used with shape + label, never color alone) */
+    --status-pending: #71717a;
+    --status-review: #fbc70e;
+    --status-approved: #005eb0;
+    --status-complete: #22c55e;
+    --status-rejected: #ef4444;
+  }
+}

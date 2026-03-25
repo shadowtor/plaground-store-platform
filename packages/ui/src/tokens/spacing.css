@@ -1,0 +1,42 @@
+/**
+ * PLAground Design System — Spacing and Border Radius Tokens
+ *
+ * Spacing: 8px grid (multiples of 4).
+ * Radii: 10px default, 6px chips, 16px hero, 8px tooltips.
+ * Source authority: Phase 1 UI Design Contract (01-UI-SPEC.md)
+ */
+
+@layer base {
+  :root {
+    /* -------------------------------------------------------------------------
+     * Spacing scale (all multiples of 4)
+     * ---------------------------------------------------------------------- */
+    --space-xs: 0.25rem;  /* 4px  — icon gaps, badge padding, tight gaps */
+    --space-sm: 0.5rem;   /* 8px  — compact spacing, input internal padding */
+    --space-md: 1rem;     /* 16px — default element spacing, card padding */
+    --space-lg: 1.5rem;   /* 24px — section padding, form group gaps */
+    --space-xl: 2rem;     /* 32px — layout column gaps, section breaks */
+    --space-2xl: 3rem;    /* 48px — major section breaks (storefront) */
+    --space-3xl: 4rem;    /* 64px — page-level hero/section spacing */
+
+    /* -------------------------------------------------------------------------
+     * Border radius scale
+     * ---------------------------------------------------------------------- */
+    --radius-sm: 6px;  /* chips, badges, status pills */
+    --radius: 10px;    /* default — buttons, inputs, cards */
+    --radius-lg: 16px; /* hero surfaces, upload drop zone */
+    --radius-md: 8px;  /* tooltips, dropdown menus */
+
+    /* -------------------------------------------------------------------------
+     * Motion timing (Framer Motion durations in ms)
+     * ---------------------------------------------------------------------- */
+    --duration-micro: 120ms;  /* button press, chip toggle */
+    --duration-panel: 200ms;  /* drawer, sheet, dialog transitions */
+    --duration-page: 230ms;   /* page route transitions */
+
+    /* Easing */
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  }
+}
