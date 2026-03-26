@@ -20,7 +20,19 @@
       "Bash(cp \".planning/phases/01-foundation/01-DISCUSSION-LOG.md\" \".planning/phases/01-plaground-commerce/01-DISCUSSION-LOG.md\")",
       "Bash(node \"$HOME/.claude/get-shit-done/bin/gsd-tools.cjs\" commit \"docs: restructure roadmap to 4 business milestones\" --files \".planning/ROADMAP.md\" \".planning/STATE.md\" \".planning/REQUIREMENTS.md\" \".planning/phases/01-plaground-commerce/01-CONTEXT.md\" \".planning/phases/01-plaground-commerce/01-DISCUSSION-LOG.md\")",
       "Skill(gsd:ui-phase)",
-      "Skill(gsd:ui-phase:*)"
+      "Skill(gsd:ui-phase:*)",
+      "Read(///nas1/Codespace/Side-Gigs/**)",
+      "Read(///nas1/Codespace/Side-Gigs/plaground-store-platform/**)",
+      "Read(///nas1/Codespace/Side-Gigs/plaground-store-platform/.planning/**)",
+      "Read(//c/Users/shado/**)",
+      "Read(//c/Users/shado/.claude/**)",
+      "Skill(gsd:execute-phase)",
+      "Skill(gsd:execute-phase:*)",
+      "Bash(pnpm docker:up)",
+      "Bash(docker pull:*)",
+      "Bash(docker inspect:*)",
+      "Bash(docker run:*)",
+      "Bash(pnpm install:*)"
     ]
   }
 }

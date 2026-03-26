@@ -40,7 +40,7 @@ services:
   # NOTE: transaction pooling disables LISTEN/NOTIFY and prepared statements
   # ---------------------------------------------------------------------------
   pgbouncer:
-    image: edoburu/pgbouncer:1.23.1
+    image: edoburu/pgbouncer@sha256:85d1e38593617af1b5f7f285e97d407e56c29939683cc7cfe4c8f6dc19f1268b
     container_name: plaground-pgbouncer
     restart: unless-stopped
     environment:

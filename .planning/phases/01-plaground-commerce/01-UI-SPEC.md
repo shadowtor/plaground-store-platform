@@ -304,6 +304,15 @@ Status is always communicated with shape + label + color, never color alone (WCA
 - KPI cards: 4-column grid at ≥1280px, 2-column at ≥768px, 1-column on mobile.
 - Detail drawers: 480px wide, slide in from right, overlay on mobile.
 - Quick actions in table rows aligned to the right column.
+- Dashboard home uses a modular card/panel system: KPI, queue, alert, and activity widgets share one
+  card language and can be rearranged in an explicit "Edit layout" mode.
+- Interaction reference: aim for the same clean, high-signal, movable-panel feeling as modern
+  printer dashboards such as Bambuddy, while keeping PLAground's own color system, typography, and
+  component shapes. Do not directly copy another product's layout, copy, or visual assets.
+- Reordering behavior: drag handles are visible only in layout-edit mode; widgets snap to the
+  underlying grid, animate to new positions in <220ms, and persist per-admin preferences.
+- Recovery path: admin dashboard includes a "Reset layout" action that restores the default widget
+  arrangement without affecting underlying data or filters.
 
 ### Admin — Operational Clarity Rule
 
@@ -522,3 +531,4 @@ required.
 - [x] Dimension 6 Registry Safety: PASS
 
 **Approval:** approved 2026-03-25
+
