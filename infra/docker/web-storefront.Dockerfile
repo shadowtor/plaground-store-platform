@@ -32,7 +32,6 @@ RUN pnpm install --frozen-lockfile
 FROM base AS dev
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/web-storefront/node_modules ./apps/web-storefront/node_modules 2>/dev/null || true
 COPY packages/config ./packages/config
 COPY packages/contracts ./packages/contracts
 COPY packages/ui ./packages/ui

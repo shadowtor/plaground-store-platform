@@ -79,7 +79,8 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None yet.
+- Add reverse proxy and edge routing
+- Add .dockerignore and trim build context
 
 ### Quick Tasks Completed
 

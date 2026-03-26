@@ -18,31 +18,39 @@ services:
   # API — Fastify server dev mode (tsx watch for hot reload)
   # ---------------------------------------------------------------------------
   api:
-    command: pnpm --filter api dev
+    command: node /app/node_modules/.pnpm/node_modules/tsx/dist/cli.mjs watch src/server.ts
     environment:
       MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY}
+    working_dir: /app/apps/api
 
   # ---------------------------------------------------------------------------
   # Worker — BullMQ background processor dev mode
   # ---------------------------------------------------------------------------
   worker:
-    command: pnpm --filter worker dev
+    command: node /app/node_modules/.pnpm/node_modules/tsx/dist/cli.mjs watch src/worker.ts
+    working_dir: /app/apps/worker
 
   # ---------------------------------------------------------------------------
   # Web Storefront — Next.js dev server
   # ---------------------------------------------------------------------------
   web-storefront:
-    command: pnpm --filter web-storefront dev
+    command: >
+      sh -lc "ln -sfn /app/node_modules /app/apps/web-storefront/node_modules &&
+      node /app/node_modules/.pnpm/node_modules/next/dist/bin/next dev --port 3000"
     environment:
       NEXT_TELEMETRY_DISABLED: "1"
+    working_dir: /app/apps/web-storefront
 
   # ---------------------------------------------------------------------------
   # Web Admin — Next.js dev server
   # ---------------------------------------------------------------------------
   web-admin:
-    command: pnpm --filter web-admin dev
+    command: >
+      sh -lc "ln -sfn /app/node_modules /app/apps/web-admin/node_modules &&
+      node /app/node_modules/.pnpm/node_modules/next/dist/bin/next dev --port 3001"
     environment:
       NEXT_TELEMETRY_DISABLED: "1"
+    working_dir: /app/apps/web-admin
 
   # ---------------------------------------------------------------------------
   # Connector — local container bridging cloud commands to BambuLab printers

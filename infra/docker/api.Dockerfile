@@ -37,7 +37,6 @@ RUN pnpm install --frozen-lockfile
 FROM base AS dev
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules 2>/dev/null || true
 
 # Copy prisma schema for client generation (bind-mount replaces at runtime)
 COPY apps/api/prisma ./apps/api/prisma
