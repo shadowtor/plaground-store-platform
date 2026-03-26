@@ -68,8 +68,8 @@
 
 ### Notifications
 
-- [ ] **NOTIF-01**: Customer receives transactional email on order confirmation and each status change
-- [ ] **NOTIF-02**: Customer receives email when a quote estimate is ready and when an admin makes an approval decision
+- [x] **NOTIF-01**: Customer receives transactional email on order confirmation and each status change
+- [x] **NOTIF-02**: Customer receives email when a quote estimate is ready and when an admin makes an approval decision
 - [ ] **NOTIF-03**: Customer can connect their Discord account to receive DM notifications for order and quote updates
 - [ ] **NOTIF-04**: Admin can configure Discord DM notifications for incoming order alerts and print queue events
 - [ ] **NOTIF-05**: Shop can add the platform Discord bot to their own server to receive order and queue notifications in a channel
@@ -200,8 +200,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ADMIN-06 | Phase 1 — PLAground Commerce | Pending |
 | ADMIN-07 | Phase 1 — PLAground Commerce | Pending |
 | ADMIN-08 | Phase 1 — PLAground Commerce | Complete |
-| NOTIF-01 | Phase 1 — PLAground Commerce | Pending |
-| NOTIF-02 | Phase 1 — PLAground Commerce | Pending |
+| NOTIF-01 | Phase 1 — PLAground Commerce | Complete |
+| NOTIF-02 | Phase 1 — PLAground Commerce | Complete |
 | NOTIF-03 | Phase 1 — PLAground Commerce | Pending |
 | NOTIF-04 | Phase 1 — PLAground Commerce | Pending |
 | NOTIF-05 | Phase 1 — PLAground Commerce | Pending |

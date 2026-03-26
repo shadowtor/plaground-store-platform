@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to execute
-stopped_at: Completed 01-04-PLAN.md — infrastructure gap closure (docker-compose.override.yml + MFA_ENCRYPTION_KEY)
-last_updated: "2026-03-26T00:06:04.699Z"
+stopped_at: Completed quick/260326-vwp — email provider architectural constraint added to REQUIREMENTS.md
+last_updated: "2026-03-26T12:02:45.537Z"
 progress:
   total_phases: 4
   completed_phases: 1
@@ -75,6 +75,7 @@ Recent decisions affecting current work:
 - [Phase 01]: CatalogFilters as client component (URL params) with SSR ProductGrid
 - [Phase 01]: docker-compose.override.yml tracked in infra/compose/ (not root-level) — .gitignore updated from blanket rule to root-anchored /docker-compose.override.yml
 - [Phase 01]: MFA_ENCRYPTION_KEY placeholder is 64 zeros — fails clearly at runtime with openssl rand -hex 32 generation instruction
+- [Phase quick]: Email delivery must use Microsoft Exchange (Graph/Azure AD) or Google Workspace (Gmail API) — self-hosted SMTP and third-party relay services are prohibited (applies to NOTIF-01, NOTIF-02, AUTH-03)
 
 ### Pending Todos
 
@@ -89,6 +90,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T00:06:04.690Z
-Stopped at: Completed 01-04-PLAN.md — infrastructure gap closure (docker-compose.override.yml + MFA_ENCRYPTION_KEY)
+Last session: 2026-03-26T12:02:40.288Z
+Stopped at: Completed quick/260326-vwp — email provider architectural constraint added to REQUIREMENTS.md
 Resume file: None
