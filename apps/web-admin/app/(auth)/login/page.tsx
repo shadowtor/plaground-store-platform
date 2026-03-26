@@ -16,6 +16,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import type { LoginRequest, LoginResponse, AuthError } from "packages/contracts/src/auth";
+import {
+  AdminAuthErrorAlert,
+  AdminAuthField,
+  AdminAuthHeading,
+  AdminAuthInput,
+  AdminAuthSubmitButton,
+} from "../_components";
 
 // =============================================================================
 // Inline design — admin uses its own dark token classes (no packages/ui imports
@@ -86,32 +93,13 @@ export default function AdminLoginPage() {
 
   return (
     <>
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold text-[#f4f4f5]">
-          Admin sign in
-        </h1>
-        <p className="mt-1 text-sm text-[#a1a1aa]">
-          Enter your credentials to continue
-        </p>
-      </div>
+      <AdminAuthHeading title="Admin sign in" description="Enter your credentials to continue" />
 
-      {serverError && (
-        <div
-          role="alert"
-          className="mb-4 rounded-lg border border-[#ef4444]/30 bg-[#ef4444]/10 px-4 py-3 text-sm text-[#ef4444]"
-        >
-          {serverError}
-        </div>
-      )}
+      {serverError ? <AdminAuthErrorAlert message={serverError} /> : null}
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
-        {/* Email field */}
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="email" className="text-sm font-medium text-[#f4f4f5]">
-            Email address
-            <span className="ml-1 text-[#ef4444]" aria-hidden="true">*</span>
-          </label>
-          <input
+        <AdminAuthField id="email" label="Email address" required error={errors.email?.message}>
+          <AdminAuthInput
             id="email"
             type="email"
             autoComplete="email"
@@ -119,81 +107,34 @@ export default function AdminLoginPage() {
             required
             aria-invalid={Boolean(errors.email)}
             aria-describedby={errors.email ? "email-error" : undefined}
-            className={[
-              "h-11 w-full rounded-[10px] px-3 py-2",
-              "bg-[#121212] text-[#f4f4f5]",
-              "border transition-colors",
-              errors.email
-                ? "border-[#ef4444] focus-visible:ring-[#ef4444]"
-                : "border-[#2a2a2a] focus-visible:ring-[#005eb0]",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1a1a1a]",
-              "placeholder:text-[#71717a]",
-              "disabled:cursor-not-allowed disabled:opacity-50",
-            ].join(" ")}
+            hasError={Boolean(errors.email)}
             {...register("email")}
           />
-          {errors.email && (
-            <p id="email-error" role="alert" className="text-sm text-[#ef4444]">
-              {errors.email.message}
-            </p>
-          )}
-        </div>
+        </AdminAuthField>
 
-        {/* Password field */}
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="password" className="text-sm font-medium text-[#f4f4f5]">
-            Password
-            <span className="ml-1 text-[#ef4444]" aria-hidden="true">*</span>
-          </label>
-          <input
+        <AdminAuthField
+          id="password"
+          label="Password"
+          required
+          error={errors.password?.message}
+        >
+          <AdminAuthInput
             id="password"
             type="password"
             autoComplete="current-password"
             required
             aria-invalid={Boolean(errors.password)}
             aria-describedby={errors.password ? "password-error" : undefined}
-            className={[
-              "h-11 w-full rounded-[10px] px-3 py-2",
-              "bg-[#121212] text-[#f4f4f5]",
-              "border transition-colors",
-              errors.password
-                ? "border-[#ef4444] focus-visible:ring-[#ef4444]"
-                : "border-[#2a2a2a] focus-visible:ring-[#005eb0]",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1a1a1a]",
-              "placeholder:text-[#71717a]",
-              "disabled:cursor-not-allowed disabled:opacity-50",
-            ].join(" ")}
+            hasError={Boolean(errors.password)}
             {...register("password")}
           />
-          {errors.password && (
-            <p id="password-error" role="alert" className="text-sm text-[#ef4444]">
-              {errors.password.message}
-            </p>
-          )}
-        </div>
+        </AdminAuthField>
 
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          aria-busy={isSubmitting}
-          className={[
-            "mt-2 h-11 w-full rounded-[10px]",
-            "bg-[#005eb0] text-white font-medium",
-            "hover:opacity-90 transition-opacity",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#005eb0] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1a1a1a]",
-            "disabled:opacity-50 disabled:cursor-not-allowed",
-            "inline-flex items-center justify-center gap-2",
-          ].join(" ")}
-        >
-          {isSubmitting && (
-            <span
-              className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
-              aria-hidden="true"
-            />
-          )}
-          {isSubmitting ? "Signing in..." : "Sign in"}
-        </button>
+        <AdminAuthSubmitButton
+          busy={isSubmitting}
+          idleLabel="Sign in"
+          busyLabel="Signing in..."
+        />
       </form>
     </>
   );
