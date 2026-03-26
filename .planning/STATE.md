@@ -81,6 +81,12 @@ Recent decisions affecting current work:
 
 None yet.
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260326-vwp | Add architectural constraint: email delivery must use Microsoft Graph or Google Workspace (Gmail API) — no SMTP/third-party relay | 2026-03-26 | 9439f4c | [260326-vwp-add-an-architectural-constraint-to-requi](./quick/260326-vwp-add-an-architectural-constraint-to-requi/) |
+
 ### Blockers/Concerns
 
 - Phase 1: Stripe auth-capture window is 5 days (Visa, post-April 2024); must track `authorized_at` and flag expiring auths in admin queue
