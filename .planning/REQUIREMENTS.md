@@ -124,6 +124,28 @@
 
 ---
 
+## Architectural Constraints
+
+These constraints are binding decisions that apply across all phases and all implementations. They are not negotiable within scope.
+
+### Email Delivery
+
+**Constraint:** All email notification functionality MUST use one of the following managed providers:
+
+- **Microsoft Exchange** via Microsoft Graph API + Azure AD (OAuth 2.0 client credentials or delegated flow)
+- **Google Workspace** via Gmail API (OAuth 2.0 service account or delegated credentials)
+
+**Prohibited approaches:**
+- Self-hosted SMTP servers (Postfix, Exim, Haraka, etc.)
+- Third-party mail relay services (SendGrid, Postmark, Mailgun, AWS SES, Resend, etc.)
+
+**Rationale:**
+Mail infrastructure is a solved problem at the enterprise level. Using Microsoft Exchange or Google Workspace offloads deliverability, SPF/DKIM/DMARC reputation management, and compliance to providers that shops already operate. It also leverages existing enterprise credentials (Azure AD service principal or Google service account) rather than introducing a new external vendor dependency with its own API key lifecycle.
+
+**Applies to:** NOTIF-01, NOTIF-02 (transactional email); AUTH-03 (password reset email); any future email-based feature.
+
+---
+
 ## Out of Scope
 
 | Feature | Reason |
