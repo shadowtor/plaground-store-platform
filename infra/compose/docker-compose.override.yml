@@ -1,0 +1,62 @@
+version: "3.9"
+
+# =============================================================================
+# PLAground Platform — Docker Compose Dev Override
+# =============================================================================
+# This file is merged on top of docker-compose.yml by the docker:up / docker:down
+# / docker:reset scripts (via -f flag).  It replaces the built-image commands
+# with hot-reload dev commands so that source changes inside the bind-mounted
+# directories are picked up without rebuilding the image.
+#
+# Only the four application services that need live-reload are listed here.
+# Infrastructure services (postgres, pgbouncer, redis, minio, mailpit) run
+# unchanged — no override needed for them.
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # API — Fastify server dev mode (tsx watch for hot reload)
+  # ---------------------------------------------------------------------------
+  api:
+    command: pnpm --filter api dev
+    environment:
+      MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY}
+
+  # ---------------------------------------------------------------------------
+  # Worker — BullMQ background processor dev mode
+  # ---------------------------------------------------------------------------
+  worker:
+    command: pnpm --filter worker dev
+
+  # ---------------------------------------------------------------------------
+  # Web Storefront — Next.js dev server
+  # ---------------------------------------------------------------------------
+  web-storefront:
+    command: pnpm --filter web-storefront dev
+    environment:
+      NEXT_TELEMETRY_DISABLED: "1"
+
+  # ---------------------------------------------------------------------------
+  # Web Admin — Next.js dev server
+  # ---------------------------------------------------------------------------
+  web-admin:
+    command: pnpm --filter web-admin dev
+    environment:
+      NEXT_TELEMETRY_DISABLED: "1"
+
+  # ---------------------------------------------------------------------------
+  # Connector — local container bridging cloud commands to BambuLab printers
+  # Phase 2 scope: connector service definition lives here when Phase 2 begins.
+  # The connector app directory (apps/connector/) is already scaffolded.
+  # ---------------------------------------------------------------------------
+  # connector:
+  #   build:
+  #     context: ../../
+  #     dockerfile: infra/docker/connector.Dockerfile
+  #     target: dev
+  #   container_name: plaground-connector
+  #   profiles: ["connector"]
+  #   environment:
+  #     NODE_ENV: development
+  #   networks:
+  #     - internal

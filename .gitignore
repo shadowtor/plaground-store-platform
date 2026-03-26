@@ -43,4 +43,6 @@ storage/
 
 # Docker
 *.log
-docker-compose.override.yml
+# Ignore root-level docker-compose.override.yml (per-developer local overrides)
+# infra/compose/docker-compose.override.yml is tracked — it is the canonical dev override
+/docker-compose.override.yml
